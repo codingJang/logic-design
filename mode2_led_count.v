@@ -4,7 +4,7 @@ module mode2_led_count(
     input wire active,
     input wire btn_go_stop,
     output reg [15:0] led,
-    output reg [15:0] seg_data
+    output reg [19:0] seg_data
 );
 
     // State definitions
@@ -131,20 +131,20 @@ module mode2_led_count(
             wave_position <= 5'd15;
             wave_direction <= 0;
             led <= 16'b0;
-            seg_data <= 16'h0000;
+            seg_data <= 20'h00000;
         end else begin
             case (state)
                 IDLE: begin
                     // Generate random target (1-16)
                     target_count <= (lfsr[3:0] == 0) ? 5'd16 : {1'b0, lfsr[3:0]};
                     if (target_count < 10) begin
-                        seg_data[15:8] <= 8'hFF;  // Blank left 2 digits
-                        seg_data[7:4] <= 4'h0;
-                        seg_data[3:0] <= target_count[3:0];
+                        seg_data[19:10] <= {5'h0F, 5'h0F};  // Blank left 2 digits
+                        seg_data[9:5] <= 5'h00;
+                        seg_data[4:0] <= {1'b0, target_count[3:0]};
                     end else begin
-                        seg_data[15:8] <= 8'hFF;  // Blank left 2 digits
-                        seg_data[7:4] <= 4'h1;
-                        seg_data[3:0] <= target_count[3:0] - 4'd10;
+                        seg_data[19:10] <= {5'h0F, 5'h0F};  // Blank left 2 digits
+                        seg_data[9:5] <= 5'h01;
+                        seg_data[4:0] <= {1'b0, target_count[3:0] - 4'd10};
                     end
                     current_count <= 0;
                     wave_position <= 15;
@@ -189,13 +189,13 @@ module mode2_led_count(
 
                     // Display target count on right 2 segments
                     if (target_count < 10) begin
-                        seg_data[15:8] <= 8'hFF;
-                        seg_data[7:4] <= 4'h0;
-                        seg_data[3:0] <= target_count[3:0];
+                        seg_data[19:10] <= {5'h0F, 5'h0F};
+                        seg_data[9:5] <= 5'h00;
+                        seg_data[4:0] <= {1'b0, target_count[3:0]};
                     end else begin
-                        seg_data[15:8] <= 8'hFF;
-                        seg_data[7:4] <= 4'h1;
-                        seg_data[3:0] <= target_count[3:0] - 4'd10;
+                        seg_data[19:10] <= {5'h0F, 5'h0F};
+                        seg_data[9:5] <= 5'h01;
+                        seg_data[4:0] <= {1'b0, target_count[3:0] - 4'd10};
                     end
                 end
 
@@ -210,29 +210,29 @@ module mode2_led_count(
 
                     // Display current count on left 2 segments
                     if (current_count < 10) begin
-                        seg_data[15:12] <= 4'h0;
-                        seg_data[11:8] <= current_count[3:0];
+                        seg_data[19:15] <= 5'h00;
+                        seg_data[14:10] <= {1'b0, current_count[3:0]};
                     end else begin
-                        seg_data[15:12] <= 4'h1;
-                        seg_data[11:8] <= current_count[3:0] - 4'd10;
+                        seg_data[19:15] <= 5'h01;
+                        seg_data[14:10] <= {1'b0, current_count[3:0] - 4'd10};
                     end
 
                     // Display UP or dn on right 2 segments
                     if (current_count < target_count) begin
-                        seg_data[7:4] <= 4'hD;   // 'U'
-                        seg_data[3:0] <= 4'hE;   // 'P'
+                        seg_data[9:5] <= 5'h0D;   // 'U'
+                        seg_data[4:0] <= 5'h0E;   // 'P'
                     end else if (current_count > target_count) begin
-                        seg_data[7:4] <= 4'hC;   // 'd'
-                        seg_data[3:0] <= 4'hA;   // 'n'
+                        seg_data[9:5] <= 5'h0C;   // 'd'
+                        seg_data[4:0] <= 5'h0A;   // 'n'
                     end
                 end
 
                 WIN: begin
                     // Display winning pattern
-                    seg_data[15:12] <= 4'h9;  // 'g'
-                    seg_data[11:8] <= 4'h0;   // 'o'
-                    seg_data[7:4] <= 4'h0;    // 'o'
-                    seg_data[3:0] <= 4'hD;    // 'd'
+                    seg_data[19:15] <= 5'h09;  // 'g'
+                    seg_data[14:10] <= 5'h00;  // 'o'
+                    seg_data[9:5]   <= 5'h00;  // 'o'
+                    seg_data[4:0]   <= 5'h0D;  // 'd'
                 end
             endcase
         end

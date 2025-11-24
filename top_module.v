@@ -43,8 +43,8 @@ module top_module(
 
     // Internal signals
     wire [15:0] led_mode1, led_mode2, led_mode3;
-    wire [15:0] seg_data_mode1, seg_data_mode2, seg_data_mode3;
-    wire [15:0] seg_data;
+    wire [19:0] seg_data_mode1, seg_data_mode2, seg_data_mode3;
+    wire [19:0] seg_data;
 
     // Mode detection
     wire mode1_active = (mode_sw == 3'b001);  // One switch up: Mode1 (Number Baseball)
@@ -91,7 +91,7 @@ module top_module(
 
     assign seg_data = mode1_active ? seg_data_mode1 :
                       mode2_active ? seg_data_mode2 :
-                      mode3_active ? seg_data_mode3 : 16'h0000;
+                      mode3_active ? seg_data_mode3 : 20'h00000;
 
     // 7-segment display controller
     seg_display_controller seg_ctrl(

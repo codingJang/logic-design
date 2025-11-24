@@ -3,24 +3,24 @@ module mode3_credits(
     input wire reset,
     input wire active,
     output reg [15:0] led,
-    output reg [15:0] seg_data
+    output reg [19:0] seg_data
 );
 
     // Team member names
     // Format: Member Number (1 digit) + 3 initials
-    // J=0xF (custom), Y=0x6, S=0x5, W=0xD (looks like U)
+    // J=0x0F (custom), Y=0x06, S=0x05, W=0x0D (looks like U)
 
     // Member 1: 장예준 (Jang Ye Jun) -> 1JYJ
-    localparam [15:0] MEMBER1 = 16'h1F66;  // "1" "J" "Y" "J"
+    localparam [19:0] MEMBER1 = {5'h01, 5'h0F, 5'h06, 5'h06};  // "1" "J" "Y" "J"
 
     // Member 2: 홍연수 (Hong Yeon Su) -> 2HYS
-    localparam [15:0] MEMBER2 = 16'h2B65;  // "2" "H" "Y" "S"
+    localparam [19:0] MEMBER2 = {5'h02, 5'h0B, 5'h06, 5'h05};  // "2" "H" "Y" "S"
 
     // Member 3: 변준우 (Byeon Jun U) -> 3BJW
-    localparam [15:0] MEMBER3 = 16'h3BFD;  // "3" "B" "J" "W"
+    localparam [19:0] MEMBER3 = {5'h03, 5'h0B, 5'h0F, 5'h0D};  // "3" "B" "J" "W"
 
     // Note: Only 3 team members provided, MEMBER4 will cycle back to MEMBER1
-    localparam [15:0] MEMBER4 = 16'h0000;  // Blank/unused
+    localparam [19:0] MEMBER4 = {5'h00, 5'h00, 5'h00, 5'h00};  // Blank/unused
 
     // State for cycling through members
     reg [1:0] member_index;  // 0-2 for 3 members (0-3 if 4 members)

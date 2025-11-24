@@ -8,7 +8,7 @@ module mode1_number_baseball(
     input wire btn_right,
     input wire btn_confirm,
     output reg [15:0] led,
-    output reg [15:0] seg_data
+    output reg [19:0] seg_data
 );
 
     // State definitions
@@ -142,7 +142,7 @@ module mode1_number_baseball(
             strike_count <= 0;
             ball_count <= 0;
             led <= 16'b0;
-            seg_data <= 16'h0000;
+            seg_data <= 20'h00000;
             answer[0] <= 0;
             answer[1] <= 0;
             answer[2] <= 0;
@@ -155,10 +155,10 @@ module mode1_number_baseball(
             case (state)
                 INPUT_ANSWER: begin
                     // Display current input with blinking at current position
-                    seg_data[15:12] <= (current_pos == 3 && blink_clk) ? 4'hF : answer[3];
-                    seg_data[11:8]  <= (current_pos == 2 && blink_clk) ? 4'hF : answer[2];
-                    seg_data[7:4]   <= (current_pos == 1 && blink_clk) ? 4'hF : answer[1];
-                    seg_data[3:0]   <= (current_pos == 0 && blink_clk) ? 4'hF : answer[0];
+                    seg_data[19:15] <= (current_pos == 3 && blink_clk) ? 5'h0F : {1'b0, answer[3]};
+                    seg_data[14:10] <= (current_pos == 2 && blink_clk) ? 5'h0F : {1'b0, answer[2]};
+                    seg_data[9:5]   <= (current_pos == 1 && blink_clk) ? 5'h0F : {1'b0, answer[1]};
+                    seg_data[4:0]   <= (current_pos == 0 && blink_clk) ? 5'h0F : {1'b0, answer[0]};
 
                     // Handle button presses
                     if (btn_up_edge) begin
@@ -178,22 +178,22 @@ module mode1_number_baseball(
                 ANSWER_CONFIRM: begin
                     // Check for duplicates - Enhanced error handling
                     if (check_duplicate(answer[0], answer[1], answer[2], answer[3])) begin
-                        seg_data <= 16'hFEEE;  // Display "-Err" (F=blank, E=E, E=r, E=r)
+                        seg_data <= {5'h0F, 5'h0E, 5'h0E, 5'h0E};  // Display "-Err" (F=blank, E=E, E=r, E=r)
                         // Stay in this state until valid input - prevent advancement
                         if (btn_confirm_edge) begin
                             next_state <= INPUT_ANSWER;  // Go back to input
                         end
                     end else begin
-                        seg_data <= 16'h9090;  // Display "gogo"
+                        seg_data <= {5'h09, 5'h00, 5'h09, 5'h00};  // Display "gogo"
                     end
                 end
 
                 INPUT_GUESS: begin
                     // Display current input with blinking at current position
-                    seg_data[15:12] <= (current_pos == 3 && blink_clk) ? 4'hF : guess[3];
-                    seg_data[11:8]  <= (current_pos == 2 && blink_clk) ? 4'hF : guess[2];
-                    seg_data[7:4]   <= (current_pos == 1 && blink_clk) ? 4'hF : guess[1];
-                    seg_data[3:0]   <= (current_pos == 0 && blink_clk) ? 4'hF : guess[0];
+                    seg_data[19:15] <= (current_pos == 3 && blink_clk) ? 5'h0F : {1'b0, guess[3]};
+                    seg_data[14:10] <= (current_pos == 2 && blink_clk) ? 5'h0F : {1'b0, guess[2]};
+                    seg_data[9:5]   <= (current_pos == 1 && blink_clk) ? 5'h0F : {1'b0, guess[1]};
+                    seg_data[4:0]   <= (current_pos == 0 && blink_clk) ? 5'h0F : {1'b0, guess[0]};
 
                     // Handle button presses for guess input
                     if (btn_up_edge) begin
@@ -219,25 +219,25 @@ module mode1_number_baseball(
                             calculate_strike_ball();
                         end else begin
                             // Show error but don't count as attempt
-                            seg_data <= 16'hFEEE;  // Display "-Err"
+                            seg_data <= {5'h0F, 5'h0E, 5'h0E, 5'h0E};  // Display "-Err"
                         end
                     end
                 end
 
                 SHOW_RESULT: begin
                     // Display strike and ball count
-                    seg_data[15:12] <= strike_count;
-                    seg_data[11:8]  <= 4'hB;  // 'S'
-                    seg_data[7:4]   <= ball_count;
-                    seg_data[3:0]   <= 4'hA;  // 'B'
+                    seg_data[19:15] <= {1'b0, strike_count};
+                    seg_data[14:10] <= 5'h0B;  // 'S'
+                    seg_data[9:5]   <= {1'b0, ball_count};
+                    seg_data[4:0]   <= 5'h0A;  // 'B'
                 end
 
                 GAME_WIN: begin
-                    seg_data <= 16'h900D;  // Display "good"
+                    seg_data <= {5'h09, 5'h00, 5'h00, 5'h0D};  // Display "good"
                 end
 
                 GAME_LOSE: begin
-                    seg_data <= 16'hC05E;  // Display "LOSE"
+                    seg_data <= {5'h0C, 5'h00, 5'h05, 5'h0E};  // Display "LOSE"
                 end
             endcase
         end
