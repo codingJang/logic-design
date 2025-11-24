@@ -119,6 +119,10 @@ module mode2_led_count(
         end
     end
 
+    // Loop indices (must be declared outside of for-loops for synthesis)
+    integer i;
+    integer j;
+
     // Main logic
     always @(posedge clk or posedge reset) begin
         if (reset || !active) begin
@@ -176,7 +180,6 @@ module mode2_led_count(
                     end
 
                     // Show wave pattern: all LEDs from 15 down to wave_position are ON
-                    integer i;
                     for (i = 0; i < 16; i = i + 1) begin
                         if (i >= wave_position)
                             led[i] <= 1'b1;
@@ -200,7 +203,7 @@ module mode2_led_count(
                     // Freeze LED state
                     // Count how many LEDs are on
                     current_count = 0;
-                    for (integer j = 0; j < 16; j = j + 1) begin
+                    for (j = 0; j < 16; j = j + 1) begin
                         if (led[j])
                             current_count = current_count + 1;
                     end
