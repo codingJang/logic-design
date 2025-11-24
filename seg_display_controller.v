@@ -45,27 +45,31 @@ module seg_display_controller(
         endcase
     end
 
-    // 7-segment decoder (cathode control - active low for common anode display)
+    // Enhanced 7-segment decoder (cathode control - active low for common anode display)
     // Segment mapping: {g, f, e, d, c, b, a}
     always @(*) begin
         case (current_digit)
-            4'h0: seg = 7'b1000000; // 0
-            4'h1: seg = 7'b1111001; // 1
-            4'h2: seg = 7'b0100100; // 2
-            4'h3: seg = 7'b0110000; // 3
-            4'h4: seg = 7'b0011001; // 4
-            4'h5: seg = 7'b0010010; // 5
-            4'h6: seg = 7'b0000010; // 6
-            4'h7: seg = 7'b1111000; // 7
-            4'h8: seg = 7'b0000000; // 8
-            4'h9: seg = 7'b0010000; // 9
-            4'hA: seg = 7'b0001000; // A (also used for 'n', 'B')
-            4'hB: seg = 7'b0000011; // b (also used for 'H')
-            4'hC: seg = 7'b1000110; // C (also used for 'L')
-            4'hD: seg = 7'b0100001; // d (also used for 'U')
-            4'hE: seg = 7'b0000110; // E (also used for 'P')
-            4'hF: seg = 7'b1111111; // Blank (all segments off)
-            default: seg = 7'b1111111;
+            // Numbers 0-9
+            4'h0: seg = 7'b1000000; // 0 - displays "O" shape
+            4'h1: seg = 7'b1111001; // 1 - right vertical bars
+            4'h2: seg = 7'b0100100; // 2 - standard 2
+            4'h3: seg = 7'b0110000; // 3 - standard 3
+            4'h4: seg = 7'b0011001; // 4 - standard 4
+            4'h5: seg = 7'b0010010; // 5 - displays "S" shape
+            4'h6: seg = 7'b0000010; // 6 - displays "Y" approximation
+            4'h7: seg = 7'b1111000; // 7 - standard 7
+            4'h8: seg = 7'b0000000; // 8 - all segments (full)
+            4'h9: seg = 7'b0010000; // 9 - displays "g" shape
+
+            // Letters A-F (custom mappings for project)
+            4'hA: seg = 7'b0001000; // A - also used for 'n'
+            4'hB: seg = 7'b0000011; // b - also used for 'H'
+            4'hC: seg = 7'b1000110; // C - also used for 'L', 'd'
+            4'hD: seg = 7'b0100001; // d - also used for 'U', 'W'
+            4'hE: seg = 7'b0000110; // E - also used for 'P'
+            4'hF: seg = 7'b0001110; // F - displays 'J' approximation
+
+            default: seg = 7'b1111111; // Blank (all segments off)
         endcase
     end
 
@@ -88,21 +92,35 @@ endmodule
 // Segment encoding (active low for common anode):
 // seg[6:0] = {g, f, e, d, c, b, a}
 //
-// Common character mappings used in this project:
-// 0-9: Standard digits
-// A: 0x0001000 (used for 'n', 'B' approximation)
-// b: 0x0000011 (used for 'H' approximation)
-// C: 0x1000110 (used for 'L' approximation)
-// d: 0x0100001 (used for 'U' approximation)
-// E: 0x0000110 (used for 'P' approximation)
-// F: 0x1111111 (blank/off)
+// Character Mapping Guide for this project:
 //
-// Special display words:
-// "good": 9, 0, 0, d
-// "gogo": 9, 0, 9, 0
-// "-Err": -, E, r, r
-// "LOSE": L, 0, S, E
-// "UP": U, P
-// "dn": d, n
+// Numbers:
+// 0-9: Standard digit displays
+// Special: 5 = "S" shape, 6 = "Y" approximation, 9 = "g" shape
+//
+// Letters (hex A-F):
+// 4'hA (10): 'A', 'n' - upper segments with middle bar
+// 4'hB (11): 'b', 'H' - lower segments + middle bar
+// 4'hC (12): 'C', 'L', 'd' - left-side segments
+// 4'hD (13): 'd', 'U', 'W' - bottom U shape
+// 4'hE (14): 'E', 'P' - left segments with top/middle
+// 4'hF (15): 'F', 'J' - best J approximation available
+//
+// Team Member Displays:
+// Member 1: 1JYJ -> 16'h1F66 (1, J=F, Y=6, J=6)
+// Member 2: 2HYS -> 16'h2B65 (2, H=B, Y=6, S=5)
+// Member 3: 3BJW -> 16'h3BFD (3, B=B, J=F, W=D)
+//
+// Mode 1 Words:
+// "good": 16'h900D (g=9, o=0, o=0, d=D)
+// "gogo": 16'h9090 (g=9, o=0, g=9, o=0)
+// "-Err": 16'hFEEE (F=blank/-, E, r=E, r=E)
+// "LOSE": 16'hC05E (L=C, O=0, S=5, E=E)
+// "XS YB": Strike/Ball display (X,Y are counts 0-4)
+//
+// Mode 2 Words:
+// "UP": 16'h--DE (U=D, P=E)
+// "dn": 16'h--CA (d=C, n=A)
+// "good": 16'h900D (same as Mode 1)
 //
 // ==============================================================

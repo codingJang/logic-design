@@ -6,24 +6,24 @@ module mode3_credits(
     output reg [15:0] seg_data
 );
 
-    // Define team member names (modify these with your actual team member initials)
+    // Team member names
     // Format: Member Number (1 digit) + 3 initials
-    // Example: 1. Hong Gill Dong -> 1 H g d
+    // J=0xF (custom), Y=0x6, S=0x5, W=0xD (looks like U)
 
-    // Member 1: Example - Hong Gill Dong (1Hgd)
-    localparam [15:0] MEMBER1 = 16'h1900;  // "1" "H" "g" "d"
+    // Member 1: 장예준 (Jang Ye Jun) -> 1JYJ
+    localparam [15:0] MEMBER1 = 16'h1F66;  // "1" "J" "Y" "J"
 
-    // Member 2: Example - Kim Non Seol (2KnS)
-    localparam [15:0] MEMBER2 = 16'h2A05;  // "2" "K" "n" "S"
+    // Member 2: 홍연수 (Hong Yeon Su) -> 2HYS
+    localparam [15:0] MEMBER2 = 16'h2B65;  // "2" "H" "Y" "S"
 
-    // Member 3: Example - Lee Non Li (3LnL)
-    localparam [15:0] MEMBER3 = 16'h3CAC;  // "3" "L" "n" "L"
+    // Member 3: 변준우 (Byeon Jun U) -> 3BJW
+    localparam [15:0] MEMBER3 = 16'h3BFD;  // "3" "B" "J" "W"
 
-    // Member 4: Example - Park Seol Gye (4PSG)
-    localparam [15:0] MEMBER4 = 16'h4E59;  // "4" "P" "S" "G"
+    // Note: Only 3 team members provided, MEMBER4 will cycle back to MEMBER1
+    localparam [15:0] MEMBER4 = 16'h0000;  // Blank/unused
 
     // State for cycling through members
-    reg [1:0] member_index;  // 0-3 for 4 members
+    reg [1:0] member_index;  // 0-2 for 3 members (0-3 if 4 members)
 
     // Clock divider for 3 second period
     reg [27:0] clk_counter;
@@ -51,8 +51,8 @@ module mode3_credits(
             led <= 16'b0;
         end else begin
             if (clk_3s) begin
-                // Cycle to next member
-                if (member_index == 3)
+                // Cycle to next member (3 members total)
+                if (member_index == 2)
                     member_index <= 0;
                 else
                     member_index <= member_index + 1;
@@ -63,7 +63,6 @@ module mode3_credits(
                 2'd0: seg_data <= MEMBER1;
                 2'd1: seg_data <= MEMBER2;
                 2'd2: seg_data <= MEMBER3;
-                2'd3: seg_data <= MEMBER4;
                 default: seg_data <= MEMBER1;
             endcase
 

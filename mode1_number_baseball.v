@@ -176,21 +176,26 @@ module mode1_number_baseball(
                 end
 
                 ANSWER_CONFIRM: begin
-                    // Check for duplicates
+                    // Check for duplicates - Enhanced error handling
                     if (check_duplicate(answer[0], answer[1], answer[2], answer[3])) begin
-                        seg_data <= 16'hEEEE;  // Display "-Err" (simplified)
+                        seg_data <= 16'hFEEE;  // Display "-Err" (F=blank, E=E, E=r, E=r)
+                        // Stay in this state until valid input - prevent advancement
+                        if (btn_confirm_edge) begin
+                            next_state <= INPUT_ANSWER;  // Go back to input
+                        end
                     end else begin
                         seg_data <= 16'h9090;  // Display "gogo"
                     end
                 end
 
                 INPUT_GUESS: begin
-                    current_pos <= 0;
+                    // Display current input with blinking at current position
                     seg_data[15:12] <= (current_pos == 3 && blink_clk) ? 4'hF : guess[3];
                     seg_data[11:8]  <= (current_pos == 2 && blink_clk) ? 4'hF : guess[2];
                     seg_data[7:4]   <= (current_pos == 1 && blink_clk) ? 4'hF : guess[1];
                     seg_data[3:0]   <= (current_pos == 0 && blink_clk) ? 4'hF : guess[0];
 
+                    // Handle button presses for guess input
                     if (btn_up_edge) begin
                         guess[current_pos] <= (guess[current_pos] == 9) ? 0 : guess[current_pos] + 1;
                     end
@@ -204,11 +209,18 @@ module mode1_number_baseball(
                         current_pos <= (current_pos == 0) ? 3 : current_pos - 1;
                     end
 
+                    // Confirm guess and check for duplicates
                     if (btn_confirm_edge) begin
-                        attempt_count <= attempt_count + 1;
-                        led[attempt_count] <= 1'b1;
-                        // Calculate strike and ball
-                        calculate_strike_ball();
+                        // Enhanced: Check for duplicate digits in guess too
+                        if (!check_duplicate(guess[0], guess[1], guess[2], guess[3])) begin
+                            attempt_count <= attempt_count + 1;
+                            led[attempt_count] <= 1'b1;
+                            // Calculate strike and ball
+                            calculate_strike_ball();
+                        end else begin
+                            // Show error but don't count as attempt
+                            seg_data <= 16'hFEEE;  // Display "-Err"
+                        end
                     end
                 end
 

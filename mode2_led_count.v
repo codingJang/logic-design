@@ -91,14 +91,30 @@ module mode2_led_count(
         endcase
     end
 
-    // LFSR for pseudo-random number generation (1-16)
+    // Enhanced LFSR for better pseudo-random number generation (1-16)
+    // Using maximal-length 16-bit LFSR with multiple tap points
     reg [15:0] lfsr;
-    wire feedback = lfsr[15] ^ lfsr[13] ^ lfsr[12] ^ lfsr[10];
+    wire feedback;
+
+    // Galois LFSR with taps at positions [16, 15, 13, 4] for maximal period
+    assign feedback = lfsr[15] ^ lfsr[14] ^ lfsr[12] ^ lfsr[3];
+
+    // Random seed based on initial clock cycles for better randomness
+    reg [15:0] seed_counter;
+    reg seed_loaded;
 
     always @(posedge clk or posedge reset) begin
-        if (reset || !active) begin
-            lfsr <= 16'hACE1;  // Seed value
-        end else begin
+        if (reset) begin
+            lfsr <= 16'h0001;  // Start with non-zero value
+            seed_counter <= 16'h0000;
+            seed_loaded <= 1'b0;
+        end else if (!active && !seed_loaded) begin
+            // Keep updating seed while not active (creates time-dependent seed)
+            seed_counter <= seed_counter + 16'h0001;
+            lfsr <= {seed_counter[7:0], seed_counter[15:8]} ^ 16'hACE1;
+        end else if (active) begin
+            seed_loaded <= 1'b1;
+            // Run LFSR
             lfsr <= {lfsr[14:0], feedback};
         end
     end
