@@ -13,6 +13,8 @@ module mode2_led_count(
     localparam STOPPED = 2'd2;
     localparam WIN = 2'd3;
 
+    reg [1:0] state, next_state;
+
     // Game variables
     reg [4:0] target_count;    // Random target (1-16)
     reg [4:0] current_count;   // LED count (0-16)
@@ -66,13 +68,13 @@ module mode2_led_count(
                 if (active && !reset) next_state = RUNNING;
             end
             RUNNING: begin
-                if  btn_confirm_edge
-        ) next_state = STOPPED;
+                // [수정] 문법 오류 해결: if (조건)
+                if (btn_confirm_edge) next_state = STOPPED;
             end
             STOPPED: begin
                 if (current_count == target_count) next_state = WIN;
-                else if  btn_confirm_edge
-        ) next_state = RUNNING;
+                // [수정] 문법 오류 해결: if (조건)
+                else if (btn_confirm_edge) next_state = RUNNING;
             end
             WIN: begin
                 if (reset) next_state = IDLE;
@@ -117,8 +119,6 @@ module mode2_led_count(
                     // Random Target 생성
                     target_count <= (lfsr[3:0] == 0) ? 5'd16 : {1'b0, lfsr[3:0]};
                     
-                    // [수정됨] Target 표시 (왼쪽 2개 비움, 오른쪽 2개 숫자)
-                    // 예: __12 (Blank, Blank, 1, 2)
                     if (target_count < 10)
                         seg_data <= {C_BLANK, C_BLANK, 5'd0, {1'b0, target_count[3:0]}};
                     else
@@ -130,7 +130,6 @@ module mode2_led_count(
                 end
 
                 RUNNING: begin
-                    // LED Wave Animation
                     if (clk_1s) begin
                         if (wave_direction == 0) begin // L -> R
                             if (wave_position == 0) begin
@@ -152,7 +151,6 @@ module mode2_led_count(
                         led[i] <= (i >= wave_position) ? 1'b1 : 1'b0;
                     end
 
-                    // Target 표시는 IDLE과 동일 유지
                     if (target_count < 10)
                         seg_data <= {C_BLANK, C_BLANK, 5'd0, {1'b0, target_count[3:0]}};
                     else
@@ -160,24 +158,17 @@ module mode2_led_count(
                 end
 
                 STOPPED: begin
-                    // LED 개수 계산
                     current_count = 0;
                     for (j = 0; j < 16; j = j + 1) begin
                         if (led[j]) current_count = current_count + 1;
                     end
-
-                    // [수정됨] 결과 표시: [현재개수] [UP/dn]
-                    // 왼쪽 2자리: 현재 개수
-                    // 오른쪽 2자리: UP(15, 16) 또는 dn(19, 20)
                     
                     if (current_count < 10) begin
-                        // 한 자리 숫자일 때 (예: 05 UP)
                         if (current_count < target_count) // UP
                             seg_data <= {5'd0, {1'b0, current_count[3:0]}, C_U, C_P};
                         else // dn
                             seg_data <= {5'd0, {1'b0, current_count[3:0]}, C_d, C_n};
                     end else begin
-                        // 두 자리 숫자일 때 (예: 12 UP)
                         if (current_count < target_count) // UP
                             seg_data <= {5'd1, {1'b0, current_count[3:0] - 4'd10}, C_U, C_P};
                         else // dn
@@ -186,7 +177,6 @@ module mode2_led_count(
                 end
 
                 WIN: begin
-                    // "good" 표시 (g, o, o, d)
                     seg_data <= {C_g, C_o, C_o, C_d};
                 end
             endcase
