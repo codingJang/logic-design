@@ -1,0 +1,235 @@
+# Logic Design Term Project - FPGA Game System
+
+This project implements a 3-mode game system on an FPGA board using Verilog HDL.
+
+## Project Overview
+
+**Course**: Logic Design (논리설계)
+**Institution**: SNUCAD
+**Due Date**: 2025-12-15 18:29
+**Demo Date**: 2025-12-15 18:30
+
+## Game Modes
+
+### Mode 1: Number Baseball (숫자 야구)
+A guessing game where the player tries to guess a 4-digit number with unique digits (0-9).
+
+**Features**:
+- User sets a 4-digit answer (no duplicates)
+- User makes guesses
+- System provides Strike (correct digit and position) and Ball (correct digit, wrong position) feedback
+- Maximum 16 attempts (tracked by LEDs)
+- Win condition: 4 strikes
+- Lose condition: 16 failed attempts
+
+**Controls**:
+- Up/Down: Change digit value (0-9)
+- Left/Right: Move between digit positions
+- Confirm: Submit answer/guess
+- Current digit blinks during input
+
+**Display Messages**:
+- `0000`: Input mode
+- `-Err`: Duplicate digits detected
+- `gogo`: Answer accepted
+- `XS YB`: X strikes, Y balls
+- `good`: Win
+- `LOSE`: Game over
+
+### Mode 2: LED Count Game (LED 개수 맞추기)
+A timing-based game where players try to stop LEDs at a specific count.
+
+**Features**:
+- Random target number (1-16) displayed on 7-segment
+- LEDs light up in a wave pattern (1 second period)
+- Player presses GO/STOP to freeze LED count
+- System compares frozen count to target
+
+**Controls**:
+- GO/STOP button: Start/stop LED animation
+
+**Display**:
+- Right 2 digits: Target count
+- Left 2 digits (after stop): Current LED count
+- Feedback: `UP` (need more) or `dn` (need less)
+- `good`: Correct count achieved
+
+### Mode 3: Credits (제작진)
+Displays team member names in rotation.
+
+**Features**:
+- Cycles through 4 team member initials
+- Format: `[Number][LastName][FirstName][MiddleName]`
+- 3-second display period per member
+- Example: `1Hgd` for "1. Hong Gill Dong"
+
+## File Structure
+
+```
+logic-design/
+├── top_module.v                 # Top-level module with mode selection
+├── mode1_number_baseball.v      # Mode 1 implementation
+├── mode2_led_count.v            # Mode 2 implementation
+├── mode3_credits.v              # Mode 3 implementation
+├── seg_display_controller.v     # 7-segment display controller
+├── constraints.xdc              # Pin constraints for Basys3 board
+└── README.md                    # This file
+```
+
+## Hardware Requirements
+
+- **FPGA Board**: Basys3 (or compatible)
+- **Clock**: 100 MHz
+- **Inputs**:
+  - 4 switches (1 reset + 3 mode selection)
+  - 6 buttons (5-way directional pad + GO/STOP)
+- **Outputs**:
+  - 16 LEDs
+  - 4-digit 7-segment display
+
+## Pin Assignments (Basys3)
+
+### Clock & Reset
+- Clock (100MHz): W5
+- Reset: W17 (SW3)
+
+### Mode Selection
+- mode_sw[0]: V17 (SW0)
+- mode_sw[1]: V16 (SW1)
+- mode_sw[2]: W16 (SW2)
+
+### Buttons
+- Confirm (Center): U18
+- Up: T18
+- Down: U17
+- Left: W19
+- Right: T17
+- GO/STOP: N17
+
+### LEDs (16 total)
+- LED[0-15]: U16, E19, U19, V19, W18, U15, U14, V14, V13, V3, W3, U3, P3, N3, P1, L1
+
+### 7-Segment Display
+- Segments (a-g): W7, W6, U8, V8, U5, V5, U7
+- Anodes (0-3): U2, U4, V4, W4
+
+## Mode Selection Guide
+
+| Mode | Switch Configuration | Description |
+|------|---------------------|-------------|
+| Mode 1 | SW0 = UP, SW1 = DOWN, SW2 = DOWN | Number Baseball |
+| Mode 2 | SW0 = UP, SW1 = UP, SW2 = DOWN | LED Count Game |
+| Mode 3 | SW0 = UP, SW1 = UP, SW2 = UP | Credits |
+
+## Reset Operation
+
+- **Reset ON** (switch UP): Hold system in reset state
+- **Reset OFF** (switch DOWN): Normal operation/start game
+
+## Setup Instructions
+
+### 1. Vivado Project Setup
+```bash
+1. Open Vivado
+2. Create new project
+3. Select Basys3 board (xc7a35tcpg236-1)
+4. Add all .v source files
+5. Add constraints.xdc file
+6. Set top_module as top-level entity
+```
+
+### 2. Customization
+
+#### Update Team Member Names (mode3_credits.v)
+Edit the MEMBER1-4 parameters:
+```verilog
+localparam [15:0] MEMBER1 = 16'h1XXX;  // Your team member 1
+localparam [15:0] MEMBER2 = 16'h2XXX;  // Your team member 2
+localparam [15:0] MEMBER3 = 16'h3XXX;  // Your team member 3
+localparam [15:0] MEMBER4 = 16'h4XXX;  // Your team member 4
+```
+
+#### Adjust Clock Dividers (if needed)
+If your board uses a different clock frequency, update the counter values in:
+- `mode1_number_baseball.v` (blink timing)
+- `mode2_led_count.v` (1-second period)
+- `mode3_credits.v` (3-second period)
+- `seg_display_controller.v` (refresh rate)
+
+### 3. Synthesis & Implementation
+```bash
+1. Run Synthesis
+2. Check for warnings/errors (do not ignore Critical Warnings!)
+3. Run Implementation
+4. Generate Bitstream
+5. Program FPGA board
+```
+
+## Testing Checklist
+
+### Mode 1 Tests
+- [ ] Input answer with 4 unique digits
+- [ ] Verify error display for duplicate digits
+- [ ] Make guesses and verify Strike/Ball calculation
+- [ ] Verify LED increments with each attempt
+- [ ] Test win condition (4 strikes)
+- [ ] Test lose condition (16 attempts)
+- [ ] Test reset functionality
+
+### Mode 2 Tests
+- [ ] Verify random target generation (1-16)
+- [ ] Confirm LED wave animation (1 second period)
+- [ ] Test GO/STOP button freeze
+- [ ] Verify UP/dn feedback
+- [ ] Test win condition
+- [ ] Test reset functionality
+
+### Mode 3 Tests
+- [ ] Verify all 4 team members display
+- [ ] Confirm 3-second rotation
+- [ ] Check display format correctness
+
+## Important Notes
+
+1. **No Plagiarism**: All code must be original. Strict copy-checking will be performed.
+2. **No Skeleton Code**: Do not use pre-built code templates from external sources.
+3. **No Testbench Provided**: Test thoroughly on actual hardware.
+4. **Warning Handling**: Do not ignore Warnings or Critical Warnings during synthesis/implementation.
+5. **Edge Cases**: Implement proper exception handling for special scenarios (partial credit available).
+6. **Submission**: Compress entire Vivado project and submit via eTL by 2025-12-15 18:29.
+
+## Troubleshooting
+
+### Common Issues
+
+1. **Buttons not responding**
+   - Add debouncing logic if needed
+   - Check pin constraints
+
+2. **7-segment display flickering**
+   - Adjust refresh rate in seg_display_controller
+   - Verify anode timing
+
+3. **Timing not accurate**
+   - Adjust clock divider constants based on actual clock frequency
+   - Use timing constraints
+
+4. **LEDs not lighting correctly**
+   - Check LED polarity in constraints
+   - Verify logic levels
+
+## Development Team
+
+Update the team member information in `mode3_credits.v` with your actual team members:
+1. Member 1: [Name]
+2. Member 2: [Name]
+3. Member 3: [Name]
+4. Member 4: [Name]
+
+## License
+
+This is an academic project for educational purposes only.
+
+## Contact
+
+For questions or issues, contact your TA or refer to course materials.
