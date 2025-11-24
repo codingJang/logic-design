@@ -13,7 +13,7 @@ module top_module(
 );
 
     // Debounced button signals
-    wire btn_up_db, btn_down_db, btn_left_db, btn_right_db, btn_confirm_db, btn_go_stop_db;
+    wire btn_up_db, btn_down_db, btn_left_db, btn_right_db, btn_center_db;
 
     // Button debouncers
     button_debouncer #(.DEBOUNCE_TIME(20)) debounce_up (
