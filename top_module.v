@@ -91,7 +91,7 @@ module top_module(
 
     assign seg_data = mode1_active ? seg_data_mode1 :
                       mode2_active ? seg_data_mode2 :
-                      mode3_active ? seg_data_mode3 : 20'h00000;
+                      mode3_active ? seg_data_mode3 : 20'b0;
 
     // 7-segment display controller
     seg_display_controller seg_ctrl(

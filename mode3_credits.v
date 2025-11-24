@@ -6,21 +6,25 @@ module mode3_credits(
     output reg [19:0] seg_data
 );
 
-    // Team member names
-    // Format: Member Number (1 digit) + 3 initials
-    // J=0x0F (custom), Y=0x06, S=0x05, W=0x0D (looks like U)
+    // 문자 매핑 (seg_display_controller 참조)
+    localparam C_1 = 5'd1;
+    localparam C_2 = 5'd2;
+    localparam C_3 = 5'd3;
+    
+    localparam C_J = 5'd21; // J (User defined)
+    localparam C_y = 5'd22; // y (User defined)
+    localparam C_h = 5'd14; // H (User defined H for h)
+    localparam C_b = 5'd18; // b (User defined)
+    localparam C_S = 5'd5;  // S (5)
 
-    // Member 1: 장예준 (Jang Ye Jun) -> 1JYJ
-    localparam [19:0] MEMBER1 = {5'h01, 5'h0F, 5'h06, 5'h06};  // "1" "J" "Y" "J"
+    // Member 1: 1 JyJ
+    localparam [19:0] MEMBER1 = {C_1, C_J, C_y, C_J};
 
-    // Member 2: 홍연수 (Hong Yeon Su) -> 2HYS
-    localparam [19:0] MEMBER2 = {5'h02, 5'h0B, 5'h06, 5'h05};  // "2" "H" "Y" "S"
+    // Member 2: 2 hyS (User H 사용)
+    localparam [19:0] MEMBER2 = {C_2, C_h, C_y, C_S};
 
-    // Member 3: 변준우 (Byeon Jun U) -> 3BJW
-    localparam [19:0] MEMBER3 = {5'h03, 5'h0B, 5'h0F, 5'h0D};  // "3" "B" "J" "W"
-
-    // Note: Only 3 team members provided, MEMBER4 will cycle back to MEMBER1
-    localparam [19:0] MEMBER4 = {5'h00, 5'h00, 5'h00, 5'h00};  // Blank/unused
+    // Member 3: 3 bJ3
+    localparam [19:0] MEMBER3 = {C_3, C_b, C_J, C_3};
 
     // State for cycling through members
     reg [1:0] member_index;  // 0-2 for 3 members (0-3 if 4 members)

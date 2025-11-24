@@ -41,7 +41,7 @@ module seg_display_controller(
             2'b01: current_digit = seg_data[14:10];  // Digit 2
             2'b10: current_digit = seg_data[9:5];    // Digit 1
             2'b11: current_digit = seg_data[4:0];    // Digit 0 (rightmost)
-            default: current_digit = 5'h00;
+            default: current_digit = 5'd31;
         endcase
     end
 
@@ -50,46 +50,64 @@ module seg_display_controller(
     // 5-bit encoding allows 32 custom characters (5'h00 to 5'h1F)
     always @(*) begin
         case (current_digit)
-            // Character 0-15 (first 16 characters)
-            5'h00: seg = 7'b1111111; // 00 - PLACEHOLDER - customize as needed
-            5'h01: seg = 7'b1111111; // 01 - PLACEHOLDER - customize as needed
-            5'h02: seg = 7'b1111111; // 02 - PLACEHOLDER - customize as needed
-            5'h03: seg = 7'b1111111; // 03 - PLACEHOLDER - customize as needed
-            5'h04: seg = 7'b1111111; // 04 - PLACEHOLDER - customize as needed
-            5'h05: seg = 7'b1111111; // 05 - PLACEHOLDER - customize as needed
-            5'h06: seg = 7'b1111111; // 06 - PLACEHOLDER - customize as needed
-            5'h07: seg = 7'b1111111; // 07 - PLACEHOLDER - customize as needed
-            5'h08: seg = 7'b1111111; // 08 - PLACEHOLDER - customize as needed
-            5'h09: seg = 7'b1111111; // 09 - PLACEHOLDER - customize as needed
-            5'h0A: seg = 7'b1111111; // 0A - PLACEHOLDER - customize as needed
-            5'h0B: seg = 7'b1111111; // 0B - PLACEHOLDER - customize as needed
-            5'h0C: seg = 7'b1111111; // 0C - PLACEHOLDER - customize as needed
-            5'h0D: seg = 7'b1111111; // 0D - PLACEHOLDER - customize as needed
-            5'h0E: seg = 7'b1111111; // 0E - PLACEHOLDER - customize as needed
-            5'h0F: seg = 7'b1111111; // 0F - PLACEHOLDER - customize as needed
+            // [0~9] 숫자 (기본 정의)
+            5'd0: seg = 7'b1000000;
+            5'd1: seg = 7'b1111001;
+            5'd2: seg = 7'b0100100;
+            5'd3: seg = 7'b0110000;
+            5'd4: seg = 7'b0011001;
+            5'd5: seg = 7'b0010010; // 'S' 모양 겸용
+            5'd6: seg = 7'b0000010;
+            5'd7: seg = 7'b1111000;
+            5'd8: seg = 7'b0000000;
+            5'd9: seg = 7'b0010000; // 'g' 모양 겸용
+                        // 10: - (Hyphen) : 1000000
+            5'd10: seg = 7'b0111111; 
+            
+            // 11: E : 1111001
+            5'd11: seg = 7'b0000110;
 
-            // Character 16-31 (next 16 characters)
-            5'h10: seg = 7'b1111111; // 10 - PLACEHOLDER - customize as needed
-            5'h11: seg = 7'b1111111; // 11 - PLACEHOLDER - customize as needed
-            5'h12: seg = 7'b1111111; // 12 - PLACEHOLDER - customize as needed
-            5'h13: seg = 7'b1111111; // 13 - PLACEHOLDER - customize as needed
-            5'h14: seg = 7'b1111111; // 14 - PLACEHOLDER - customize as needed
-            5'h15: seg = 7'b1111111; // 15 - PLACEHOLDER - customize as needed
-            5'h16: seg = 7'b1111111; // 16 - PLACEHOLDER - customize as needed
-            5'h17: seg = 7'b1111111; // 17 - PLACEHOLDER - customize as needed
-            5'h18: seg = 7'b1111111; // 18 - PLACEHOLDER - customize as needed
-            5'h19: seg = 7'b1111111; // 19 - PLACEHOLDER - customize as needed
-            5'h1A: seg = 7'b1111111; // 1A - PLACEHOLDER - customize as needed
-            5'h1B: seg = 7'b1111111; // 1B - PLACEHOLDER - customize as needed
-            5'h1C: seg = 7'b1111111; // 1C - PLACEHOLDER - customize as needed
-            5'h1D: seg = 7'b1111111; // 1D - PLACEHOLDER - customize as needed
-            5'h1E: seg = 7'b1111111; // 1E - PLACEHOLDER - customize as needed
-            5'h1F: seg = 7'b1111111; // 1F - PLACEHOLDER - customize as needed
+            // 12: r : 1010000
+            5'd12: seg = 7'b0101111;
 
-            default: seg = 7'b1111111; // Blank (all segments off)
+            // 13: L : 0111000
+            5'd13: seg = 7'b1000111;
+
+            // 14: H : 0001001 (이미지 수치 그대로 적용)
+            // (참고: 이미지 수치대로면 b,c,e,f,g 켜짐 -> H 모양 맞음)
+            5'd14: seg = 7'b1110110; 
+
+            // 15: U : 0111110
+            5'd15: seg = 7'b1000001;
+
+            // 16: P : 1110011
+            5'd16: seg = 7'b0001100;
+
+            // 17: o (square) : 1011100
+            5'd17: seg = 7'b0100011;
+
+            // 18: b : 1111100
+            5'd18: seg = 7'b0000011;
+
+            // 19: d : 1011110
+            5'd19: seg = 7'b0100001;
+
+            // 20: n (pi) : 1010100
+            5'd20: seg = 7'b0101011;
+
+            // 21: J (reversed L) : 0001110
+            5'd21: seg = 7'b1110001;
+
+            // 22: y : 1101110
+            5'd22: seg = 7'b0010001;
+
+            // [기타]
+            5'd30: seg = 7'b0001011; // 소문자 h (이미지엔 H만 있어서 혹시 몰라 추가, 6변형)
+            5'd31: seg = 7'b1111111; // Blank (완전 꺼짐)
+
+            default: seg = 7'b1111111;
         endcase
     end
-
 endmodule
 
 
