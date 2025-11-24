@@ -86,8 +86,6 @@ set_property PACKAGE_PIN T17 [get_ports btn_right]
     set_property IOSTANDARD LVCMOS33 [get_ports btn_right]
 set_property PACKAGE_PIN U17 [get_ports btn_down]
     set_property IOSTANDARD LVCMOS33 [get_ports btn_down]
-set_property PACKAGE_PIN N17 [get_ports btn_go_stop]
-    set_property IOSTANDARD LVCMOS33 [get_ports btn_go_stop]
 
 ## Configuration options
 set_property CONFIG_VOLTAGE 3.3 [current_design]

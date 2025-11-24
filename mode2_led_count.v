@@ -34,8 +34,8 @@ module mode2_led_count(
 
     // Button edge detection
     reg btn_go_stop_prev;
-    wire btn_go_stop_edge;
-    assign btn_go_stop_edge = btn_go_stop && !btn_go_stop_prev;
+    wire btn_confirm_edge;
+    assign btn_confirm_edge = btn_go_stop && !btn_go_stop_prev;
 
     // Timer Logic
     always @(posedge clk or posedge reset) begin
@@ -66,11 +66,13 @@ module mode2_led_count(
                 if (active && !reset) next_state = RUNNING;
             end
             RUNNING: begin
-                if (btn_go_stop_edge) next_state = STOPPED;
+                if  btn_confirm_edge
+        ) next_state = STOPPED;
             end
             STOPPED: begin
                 if (current_count == target_count) next_state = WIN;
-                else if (btn_go_stop_edge) next_state = RUNNING;
+                else if  btn_confirm_edge
+        ) next_state = RUNNING;
             end
             WIN: begin
                 if (reset) next_state = IDLE;
