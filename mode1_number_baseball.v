@@ -60,7 +60,7 @@ module mode1_number_baseball(
     localparam C_S      = 5'd5;  // S (숫자 5 모양)
     localparam C_b      = 5'd18; // b
     localparam C_d      = 5'd19; // d
-    localparam C_1      = 5'd1;  // 1 (L 대용)
+    localparam C_L      = 5'd13;  // L
 
     // 중복 체크 함수
     function check_duplicate;
@@ -167,11 +167,17 @@ module mode1_number_baseball(
             current_pos <= 0; attempt_count <= 0;
             strike_count <= 0; ball_count <= 0;
             led <= 16'b0; 
-            seg_data <= {5'd0, 5'd0, 5'd0, 5'd0}; // 0000
+            seg_data <= {5'd0, 5'd0, 5'd0, 5'd0}; // 0000 초기화
+            // 변수 초기화
             answer[0] <= 0; answer[1] <= 0; answer[2] <= 0; answer[3] <= 0;
             guess[0] <= 0; guess[1] <= 0; guess[2] <= 0; guess[3] <= 0;
         end else begin
             case (state)
+                // [수정] IDLE 상태 명시: 상태 전이 중에도 화면에 0000 유지
+                IDLE: begin
+                    seg_data <= {5'd0, 5'd0, 5'd0, 5'd0};
+                end
+
                 INPUT_ANSWER: begin
                     // 깜빡임에 C_BLANK(31) 사용, 숫자는 앞에 0붙여 5비트로
                     seg_data[19:15] <= (current_pos == 3 && blink_clk) ? C_BLANK : {1'b0, answer[3]};
@@ -230,7 +236,7 @@ module mode1_number_baseball(
                 end
 
                 GAME_LOSE: begin
-                    seg_data <= {C_1, C_o, C_S, C_E}; // 1OSE (L대신 1사용)
+                    seg_data <= {C_L, C_o, C_S, C_E}; // LOSE
                 end
             endcase
         end
