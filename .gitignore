@@ -1,0 +1,37 @@
+# Vivado generated project directory
+project_1/
+
+# Vivado generated folders
+*.runs/
+*.cache/
+*.hw/
+*.sim/
+*.ip_user_files/
+*.Xil/
+
+# Vivado project files
+*.xpr
+*.xpr.lock
+
+# Reports, logs, misc tool outputs
+*.log
+*.jou
+*.str
+*.rpt
+*.html
+*.xml
+*.lso
+*.pan
+*.prm
+*.srp
+*.dcp
+
+# Bitstreams and programming files (optional — keep if you want them in git)
+*.bit
+*.bin
+*.mcs
+
+# OS generated
+.DS_Store
+Thumbs.db
+
