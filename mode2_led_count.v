@@ -4,7 +4,7 @@ module mode2_led_count(
     input wire active,
     input wire btn_go_stop,
     output reg [15:0] led,
-    output reg [15:0] seg_data
+    output reg [19:0] seg_data
 );
 
     // State definitions
@@ -15,15 +15,19 @@ module mode2_led_count(
 
     reg [1:0] state, next_state;
 
-    // Random target number (1-16)
-    reg [4:0] target_count;
+    // Game variables
+    reg [4:0] target_count;    // Random target (1-16)
+    reg [4:0] current_count;   // LED count (0-16)
+    reg [4:0] wave_position;   // 0-15
+    reg wave_direction;        // 0: L->R, 1: R->L
 
-    // Current LED count (0-16)
-    reg [4:0] current_count;
-
-    // LED wave animation control
-    reg [4:0] wave_position;  // 0-15 for LED position
-    reg wave_direction;       // 0: left to right, 1: right to left
+    localparam C_BLANK = 5'd31; // 빈칸
+    localparam C_U     = 5'd15; // U
+    localparam C_P     = 5'd16; // P
+    localparam C_d     = 5'd19; // d
+    localparam C_n     = 5'd20; // n (pi/n 모양)
+    localparam C_g     = 5'd9;  // g
+    localparam C_o     = 5'd17; // o (네모)
 
     // Clock divider for 1 second period
     reg [26:0] clk_counter;
@@ -32,98 +36,75 @@ module mode2_led_count(
 
     // Button edge detection
     reg btn_go_stop_prev;
-    wire btn_go_stop_edge;
-    assign btn_go_stop_edge = btn_go_stop && !btn_go_stop_prev;
+    wire btn_confirm_edge;
+    assign btn_confirm_edge = btn_go_stop && !btn_go_stop_prev;
 
-    // Clock divider for 1Hz (1 second period)
+    // Timer Logic
     always @(posedge clk or posedge reset) begin
-        if (reset || !active) begin
-            clk_counter <= 0;
-        end else begin
-            if (clk_counter == 27'd100_000_000) begin  // Adjust based on your FPGA clock
-                clk_counter <= 0;
-            end else begin
-                clk_counter <= clk_counter + 1;
-            end
+        if (reset || !active) clk_counter <= 0;
+        else begin
+            if (clk_counter == 27'd100_000_000) clk_counter <= 0;
+            else clk_counter <= clk_counter + 1;
         end
     end
 
-    // State register
+    // State Register
     always @(posedge clk or posedge reset) begin
-        if (reset || !active) begin
-            state <= IDLE;
-        end else begin
-            state <= next_state;
-        end
+        if (reset || !active) state <= IDLE;
+        else state <= next_state;
     end
 
-    // Button edge detection
+    // Button Register
     always @(posedge clk or posedge reset) begin
-        if (reset) begin
-            btn_go_stop_prev <= 0;
-        end else begin
-            btn_go_stop_prev <= btn_go_stop;
-        end
+        if (reset) btn_go_stop_prev <= 0;
+        else btn_go_stop_prev <= btn_go_stop;
     end
 
-    // Next state logic
+    // Next State Logic
     always @(*) begin
         next_state = state;
         case (state)
             IDLE: begin
-                if (active && !reset)
-                    next_state = RUNNING;
+                if (active && !reset) next_state = RUNNING;
             end
             RUNNING: begin
-                if (btn_go_stop_edge)
-                    next_state = STOPPED;
+                // [수정] 문법 오류 해결: if (조건)
+                if (btn_confirm_edge) next_state = STOPPED;
             end
             STOPPED: begin
-                if (current_count == target_count)
-                    next_state = WIN;
-                else if (btn_go_stop_edge)
-                    next_state = RUNNING;
+                if (current_count == target_count) next_state = WIN;
+                // [수정] 문법 오류 해결: if (조건)
+                else if (btn_confirm_edge) next_state = RUNNING;
             end
             WIN: begin
-                if (reset)
-                    next_state = IDLE;
+                if (reset) next_state = IDLE;
             end
         endcase
     end
 
-    // Enhanced LFSR for better pseudo-random number generation (1-16)
-    // Using maximal-length 16-bit LFSR with multiple tap points
+    // Random Number Generator (LFSR)
     reg [15:0] lfsr;
-    wire feedback;
-
-    // Galois LFSR with taps at positions [16, 15, 13, 4] for maximal period
-    assign feedback = lfsr[15] ^ lfsr[14] ^ lfsr[12] ^ lfsr[3];
-
-    // Random seed based on initial clock cycles for better randomness
+    wire feedback = lfsr[15] ^ lfsr[14] ^ lfsr[12] ^ lfsr[3];
     reg [15:0] seed_counter;
     reg seed_loaded;
 
     always @(posedge clk or posedge reset) begin
         if (reset) begin
-            lfsr <= 16'h0001;  // Start with non-zero value
-            seed_counter <= 16'h0000;
-            seed_loaded <= 1'b0;
+            lfsr <= 16'h0001;
+            seed_counter <= 0;
+            seed_loaded <= 0;
         end else if (!active && !seed_loaded) begin
-            // Keep updating seed while not active (creates time-dependent seed)
-            seed_counter <= seed_counter + 16'h0001;
+            seed_counter <= seed_counter + 1;
             lfsr <= {seed_counter[7:0], seed_counter[15:8]} ^ 16'hACE1;
         end else if (active) begin
-            seed_loaded <= 1'b1;
-            // Run LFSR
+            seed_loaded <= 1;
             lfsr <= {lfsr[14:0], feedback};
         end
     end
 
-    // Loop indices (must be declared outside of for-loops for synthesis)
-    integer i;
-    integer j;
+    integer i, j;
 
-    // Main logic
+    // Main Logic & Display
     always @(posedge clk or posedge reset) begin
         if (reset || !active) begin
             target_count <= 5'd1;
@@ -131,108 +112,72 @@ module mode2_led_count(
             wave_position <= 5'd15;
             wave_direction <= 0;
             led <= 16'b0;
-            seg_data <= 16'h0000;
+            seg_data <= {C_BLANK, C_BLANK, C_BLANK, C_BLANK};
         end else begin
             case (state)
                 IDLE: begin
-                    // Generate random target (1-16)
+                    // Random Target 생성
                     target_count <= (lfsr[3:0] == 0) ? 5'd16 : {1'b0, lfsr[3:0]};
-                    if (target_count < 10) begin
-                        seg_data[15:8] <= 8'hFF;  // Blank left 2 digits
-                        seg_data[7:4] <= 4'h0;
-                        seg_data[3:0] <= target_count[3:0];
-                    end else begin
-                        seg_data[15:8] <= 8'hFF;  // Blank left 2 digits
-                        seg_data[7:4] <= 4'h1;
-                        seg_data[3:0] <= target_count[3:0] - 4'd10;
-                    end
+                    
+                    if (target_count < 10)
+                        seg_data <= {C_BLANK, C_BLANK, 5'd0, {1'b0, target_count[3:0]}};
+                    else
+                        seg_data <= {C_BLANK, C_BLANK, 5'd1, {1'b0, target_count[3:0] - 4'd10}};
+                    
                     current_count <= 0;
                     wave_position <= 15;
                     led <= 16'b0;
                 end
 
                 RUNNING: begin
-                    // LED wave animation (1 second period)
                     if (clk_1s) begin
-                        // Update wave position
-                        if (wave_direction == 0) begin
-                            // Moving left to right (15 -> 0)
+                        if (wave_direction == 0) begin // L -> R
                             if (wave_position == 0) begin
                                 wave_direction <= 1;
                                 wave_position <= 1;
-                            end else begin
-                                wave_position <= wave_position - 1;
-                            end
-                        end else begin
-                            // Moving right to left (0 -> 15)
+                            end else wave_position <= wave_position - 1;
+                        end else begin // R -> L
                             if (wave_position == 15) begin
                                 wave_direction <= 0;
                                 wave_position <= 14;
-                            end else begin
-                                wave_position <= wave_position + 1;
-                            end
+                            end else wave_position <= wave_position + 1;
                         end
 
-                        // Update current count and LED display
                         current_count <= current_count + 1;
-                        if (current_count >= 16)
-                            current_count <= 1;
+                        if (current_count >= 16) current_count <= 1;
                     end
 
-                    // Show wave pattern: all LEDs from 15 down to wave_position are ON
                     for (i = 0; i < 16; i = i + 1) begin
-                        if (i >= wave_position)
-                            led[i] <= 1'b1;
-                        else
-                            led[i] <= 1'b0;
+                        led[i] <= (i >= wave_position) ? 1'b1 : 1'b0;
                     end
 
-                    // Display target count on right 2 segments
-                    if (target_count < 10) begin
-                        seg_data[15:8] <= 8'hFF;
-                        seg_data[7:4] <= 4'h0;
-                        seg_data[3:0] <= target_count[3:0];
-                    end else begin
-                        seg_data[15:8] <= 8'hFF;
-                        seg_data[7:4] <= 4'h1;
-                        seg_data[3:0] <= target_count[3:0] - 4'd10;
-                    end
+                    if (target_count < 10)
+                        seg_data <= {C_BLANK, C_BLANK, 5'd0, {1'b0, target_count[3:0]}};
+                    else
+                        seg_data <= {C_BLANK, C_BLANK, 5'd1, {1'b0, target_count[3:0] - 4'd10}};
                 end
 
                 STOPPED: begin
-                    // Freeze LED state
-                    // Count how many LEDs are on
                     current_count = 0;
                     for (j = 0; j < 16; j = j + 1) begin
-                        if (led[j])
-                            current_count = current_count + 1;
+                        if (led[j]) current_count = current_count + 1;
                     end
-
-                    // Display current count on left 2 segments
+                    
                     if (current_count < 10) begin
-                        seg_data[15:12] <= 4'h0;
-                        seg_data[11:8] <= current_count[3:0];
+                        if (current_count < target_count) // UP
+                            seg_data <= {5'd0, {1'b0, current_count[3:0]}, C_U, C_P};
+                        else // dn
+                            seg_data <= {5'd0, {1'b0, current_count[3:0]}, C_d, C_n};
                     end else begin
-                        seg_data[15:12] <= 4'h1;
-                        seg_data[11:8] <= current_count[3:0] - 4'd10;
-                    end
-
-                    // Display UP or dn on right 2 segments
-                    if (current_count < target_count) begin
-                        seg_data[7:4] <= 4'hD;   // 'U'
-                        seg_data[3:0] <= 4'hE;   // 'P'
-                    end else if (current_count > target_count) begin
-                        seg_data[7:4] <= 4'hC;   // 'd'
-                        seg_data[3:0] <= 4'hA;   // 'n'
+                        if (current_count < target_count) // UP
+                            seg_data <= {5'd1, {1'b0, current_count[3:0] - 4'd10}, C_U, C_P};
+                        else // dn
+                            seg_data <= {5'd1, {1'b0, current_count[3:0] - 4'd10}, C_d, C_n};
                     end
                 end
 
                 WIN: begin
-                    // Display winning pattern
-                    seg_data[15:12] <= 4'h9;  // 'g'
-                    seg_data[11:8] <= 4'h0;   // 'o'
-                    seg_data[7:4] <= 4'h0;    // 'o'
-                    seg_data[3:0] <= 4'hD;    // 'd'
+                    seg_data <= {C_g, C_o, C_o, C_d};
                 end
             endcase
         end

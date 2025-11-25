@@ -6,15 +6,14 @@ module top_module(
     input wire btn_down,         // Down button (raw)
     input wire btn_left,         // Left button (raw)
     input wire btn_right,        // Right button (raw)
-    input wire btn_confirm,      // Confirm button (center, raw)
-    input wire btn_go_stop,      // GO/STOP button for Mode2 (raw)
+    input wire btn_center,
     output wire [15:0] led,      // 16 LEDs
     output wire [6:0] seg,       // 7-segment display segments
     output wire [3:0] an         // 7-segment display anodes (4 digits)
 );
 
     // Debounced button signals
-    wire btn_up_db, btn_down_db, btn_left_db, btn_right_db, btn_confirm_db, btn_go_stop_db;
+    wire btn_up_db, btn_down_db, btn_left_db, btn_right_db, btn_center_db;
 
     // Button debouncers
     button_debouncer #(.DEBOUNCE_TIME(20)) debounce_up (
@@ -33,18 +32,14 @@ module top_module(
         .clk(clk), .reset(reset), .btn_in(btn_right), .btn_out(btn_right_db)
     );
 
-    button_debouncer #(.DEBOUNCE_TIME(20)) debounce_confirm (
-        .clk(clk), .reset(reset), .btn_in(btn_confirm), .btn_out(btn_confirm_db)
-    );
-
-    button_debouncer #(.DEBOUNCE_TIME(20)) debounce_go_stop (
-        .clk(clk), .reset(reset), .btn_in(btn_go_stop), .btn_out(btn_go_stop_db)
+    button_debouncer #(.DEBOUNCE_TIME(20)) debounce_center (
+        .clk(clk), .reset(reset), .btn_in(btn_center), .btn_out(btn_center_db)
     );
 
     // Internal signals
     wire [15:0] led_mode1, led_mode2, led_mode3;
-    wire [15:0] seg_data_mode1, seg_data_mode2, seg_data_mode3;
-    wire [15:0] seg_data;
+    wire [19:0] seg_data_mode1, seg_data_mode2, seg_data_mode3;
+    wire [19:0] seg_data;
 
     // Mode detection
     wire mode1_active = (mode_sw == 3'b001);  // One switch up: Mode1 (Number Baseball)
@@ -60,17 +55,18 @@ module top_module(
         .btn_down(btn_down_db),
         .btn_left(btn_left_db),
         .btn_right(btn_right_db),
-        .btn_confirm(btn_confirm_db),
+        .btn_confirm(btn_center_db), 
         .led(led_mode1),
         .seg_data(seg_data_mode1)
     );
+
 
     // Instantiate Mode 2: LED Count Game (with debounced button)
     mode2_led_count mode2(
         .clk(clk),
         .reset(reset),
         .active(mode2_active),
-        .btn_go_stop(btn_go_stop_db),
+        .btn_go_stop(btn_center_db),
         .led(led_mode2),
         .seg_data(seg_data_mode2)
     );
@@ -91,7 +87,7 @@ module top_module(
 
     assign seg_data = mode1_active ? seg_data_mode1 :
                       mode2_active ? seg_data_mode2 :
-                      mode3_active ? seg_data_mode3 : 16'h0000;
+                      mode3_active ? seg_data_mode3 : 20'b0;
 
     // 7-segment display controller
     seg_display_controller seg_ctrl(

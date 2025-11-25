@@ -1,7 +1,7 @@
 module seg_display_controller(
     input wire clk,
     input wire reset,
-    input wire [15:0] seg_data,  // 4 hex digits to display
+    input wire [19:0] seg_data,  // 4 digits to display (5 bits each = 32 characters)
     output reg [6:0] seg,         // 7-segment cathodes (a-g)
     output reg [3:0] an           // 4 anodes for 4 digits
 );
@@ -12,7 +12,7 @@ module seg_display_controller(
     assign digit_select = refresh_counter[16:15];  // Select which digit to display
 
     // Current digit data to decode
-    reg [3:0] current_digit;
+    reg [4:0] current_digit;  // 5 bits = 32 possible characters
 
     // Refresh counter
     always @(posedge clk or posedge reset) begin
@@ -37,42 +37,77 @@ module seg_display_controller(
     // Select current digit data from seg_data
     always @(*) begin
         case (digit_select)
-            2'b00: current_digit = seg_data[15:12];  // Digit 3 (leftmost)
-            2'b01: current_digit = seg_data[11:8];   // Digit 2
-            2'b10: current_digit = seg_data[7:4];    // Digit 1
-            2'b11: current_digit = seg_data[3:0];    // Digit 0 (rightmost)
-            default: current_digit = 4'h0;
+            2'b00: current_digit = seg_data[19:15];  // Digit 3 (leftmost)
+            2'b01: current_digit = seg_data[14:10];  // Digit 2
+            2'b10: current_digit = seg_data[9:5];    // Digit 1
+            2'b11: current_digit = seg_data[4:0];    // Digit 0 (rightmost)
+            default: current_digit = 5'd31;
         endcase
     end
 
     // Enhanced 7-segment decoder (cathode control - active low for common anode display)
     // Segment mapping: {g, f, e, d, c, b, a}
+    // 5-bit encoding allows 32 custom characters (5'h00 to 5'h1F)
     always @(*) begin
         case (current_digit)
-            // Numbers 0-9
-            4'h0: seg = 7'b1000000; // 0 - displays "O" shape
-            4'h1: seg = 7'b1111001; // 1 - right vertical bars
-            4'h2: seg = 7'b0100100; // 2 - standard 2
-            4'h3: seg = 7'b0110000; // 3 - standard 3
-            4'h4: seg = 7'b0011001; // 4 - standard 4
-            4'h5: seg = 7'b0010010; // 5 - displays "S" shape
-            4'h6: seg = 7'b0000010; // 6 - displays "Y" approximation
-            4'h7: seg = 7'b1111000; // 7 - standard 7
-            4'h8: seg = 7'b0000000; // 8 - all segments (full)
-            4'h9: seg = 7'b0010000; // 9 - displays "g" shape
+            // [0~9] 숫자 (기본 정의)
+            5'd0: seg = 7'b1000000;
+            5'd1: seg = 7'b1111001;
+            5'd2: seg = 7'b0100100;
+            5'd3: seg = 7'b0110000;
+            5'd4: seg = 7'b0011001;
+            5'd5: seg = 7'b0010010; // 'S' 모양 겸용
+            5'd6: seg = 7'b0000010;
+            5'd7: seg = 7'b1111000;
+            5'd8: seg = 7'b0000000;
+            5'd9: seg = 7'b0010000; // 'g' 모양 겸용
+                        // 10: - (Hyphen) : 1000000
+            5'd10: seg = 7'b0111111; 
+            
+            // 11: E : 1111001
+            5'd11: seg = 7'b0000110;
 
-            // Letters A-F (custom mappings for project)
-            4'hA: seg = 7'b0001000; // A - also used for 'n'
-            4'hB: seg = 7'b0000011; // b - also used for 'H'
-            4'hC: seg = 7'b1000110; // C - also used for 'L', 'd'
-            4'hD: seg = 7'b0100001; // d - also used for 'U', 'W'
-            4'hE: seg = 7'b0000110; // E - also used for 'P'
-            4'hF: seg = 7'b0001110; // F - displays 'J' approximation
+            // 12: r : 1010000
+            5'd12: seg = 7'b0101111;
 
-            default: seg = 7'b1111111; // Blank (all segments off)
+            // 13: L : 0111000
+            5'd13: seg = 7'b1000111;
+
+            // 14: H : 1110110
+            // (참고: 이미지 수치대로면 b,c,e,f,g 켜짐 -> H 모양 맞음)
+            5'd14: seg = 7'b1110110; 
+
+            // 15: U : 0111110
+            5'd15: seg = 7'b1000001;
+
+            // 16: P : 1110011
+            5'd16: seg = 7'b0001100;
+
+            // 17: o (square) : 1011100
+            5'd17: seg = 7'b0100011;
+
+            // 18: b : 1111100
+            5'd18: seg = 7'b0000011;
+
+            // 19: d : 1011110
+            5'd19: seg = 7'b0100001;
+
+            // 20: n (pi) : 1010100
+            5'd20: seg = 7'b0101011;
+
+            // 21: J (reversed L) : 0001110
+            5'd21: seg = 7'b1110001;
+
+            // 22: y : 1101110
+            5'd22: seg = 7'b0010001;
+
+            // [기타]
+            5'd30: seg = 7'b0001011; // 소문자 h (이미지엔 H만 있어서 혹시 몰라 추가, 6변형)
+            5'd31: seg = 7'b1111111; // Blank (완전 꺼짐)
+
+            default: seg = 7'b1111111;
         endcase
     end
-
 endmodule
 
 
@@ -92,35 +127,36 @@ endmodule
 // Segment encoding (active low for common anode):
 // seg[6:0] = {g, f, e, d, c, b, a}
 //
-// Character Mapping Guide for this project:
+// Character Mapping Guide:
 //
-// Numbers:
-// 0-9: Standard digit displays
-// Special: 5 = "S" shape, 6 = "Y" approximation, 9 = "g" shape
+// 5-bit encoding (5'h00 to 5'h1F) = 32 custom characters
+// Input format: 20-bit vector [19:0]
+//   - seg_data[19:15] = leftmost digit  (digit 3)
+//   - seg_data[14:10] = digit 2
+//   - seg_data[9:5]   = digit 1
+//   - seg_data[4:0]   = rightmost digit (digit 0)
 //
-// Letters (hex A-F):
-// 4'hA (10): 'A', 'n' - upper segments with middle bar
-// 4'hB (11): 'b', 'H' - lower segments + middle bar
-// 4'hC (12): 'C', 'L', 'd' - left-side segments
-// 4'hD (13): 'd', 'U', 'W' - bottom U shape
-// 4'hE (14): 'E', 'P' - left segments with top/middle
-// 4'hF (15): 'F', 'J' - best J approximation available
+// CUSTOMIZE THE CHARACTER SET:
+// Edit the case statement above to define your 32 characters (5'h00 to 5'h1F)
+// Each character maps to a 7-bit segment pattern: {g, f, e, d, c, b, a}
 //
-// Team Member Displays:
-// Member 1: 1JYJ -> 16'h1F66 (1, J=F, Y=6, J=6)
-// Member 2: 2HYS -> 16'h2B65 (2, H=B, Y=6, S=5)
-// Member 3: 3BJW -> 16'h3BFD (3, B=B, J=F, W=D)
-//
-// Mode 1 Words:
-// "good": 16'h900D (g=9, o=0, o=0, d=D)
-// "gogo": 16'h9090 (g=9, o=0, g=9, o=0)
-// "-Err": 16'hFEEE (F=blank/-, E, r=E, r=E)
-// "LOSE": 16'hC05E (L=C, O=0, S=5, E=E)
-// "XS YB": Strike/Ball display (X,Y are counts 0-4)
-//
-// Mode 2 Words:
-// "UP": 16'h--DE (U=D, P=E)
-// "dn": 16'h--CA (d=C, n=A)
-// "good": 16'h900D (same as Mode 1)
+// Example segment patterns (active low):
+//   7'b1000000 = '0' (O shape)
+//   7'b1111001 = '1' (right bars)
+//   7'b0100100 = '2'
+//   7'b0110000 = '3'
+//   7'b0011001 = '4'
+//   7'b0010010 = '5' or 'S'
+//   7'b0000010 = '6' or 'Y'
+//   7'b1111000 = '7'
+//   7'b0000000 = '8' (all segments)
+//   7'b0010000 = '9' or 'g'
+//   7'b0001000 = 'A' or 'n'
+//   7'b0000011 = 'b' or 'H'
+//   7'b1000110 = 'C' or 'L' or 'd'
+//   7'b0100001 = 'd' or 'U' or 'W'
+//   7'b0000110 = 'E' or 'P'
+//   7'b0001110 = 'F' or 'J'
+//   7'b1111111 = blank (all off)
 //
 // ==============================================================

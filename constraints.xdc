@@ -75,9 +75,12 @@ set_property PACKAGE_PIN V4 [get_ports {an[2]}]
 set_property PACKAGE_PIN W4 [get_ports {an[3]}]
     set_property IOSTANDARD LVCMOS33 [get_ports {an[3]}]
 
-## Buttons (5-way directional + GO/STOP)
-set_property PACKAGE_PIN U18 [get_ports btn_confirm]
-    set_property IOSTANDARD LVCMOS33 [get_ports btn_confirm]
+## Buttons
+## Center Button (Used for Confirm in Mode1, GO/STOP in Mode2)
+set_property PACKAGE_PIN U18 [get_ports btn_center]
+    set_property IOSTANDARD LVCMOS33 [get_ports btn_center]
+
+## Directional Buttons
 set_property PACKAGE_PIN T18 [get_ports btn_up]
     set_property IOSTANDARD LVCMOS33 [get_ports btn_up]
 set_property PACKAGE_PIN W19 [get_ports btn_left]
@@ -86,8 +89,6 @@ set_property PACKAGE_PIN T17 [get_ports btn_right]
     set_property IOSTANDARD LVCMOS33 [get_ports btn_right]
 set_property PACKAGE_PIN U17 [get_ports btn_down]
     set_property IOSTANDARD LVCMOS33 [get_ports btn_down]
-set_property PACKAGE_PIN N17 [get_ports btn_go_stop]
-    set_property IOSTANDARD LVCMOS33 [get_ports btn_go_stop]
 
 ## Configuration options
 set_property CONFIG_VOLTAGE 3.3 [current_design]
