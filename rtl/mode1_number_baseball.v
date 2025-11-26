@@ -61,6 +61,7 @@ module mode1_number_baseball(
     localparam C_b      = 5'd18; // b
     localparam C_d      = 5'd19; // d
     localparam C_1      = 5'd1;  // 1 (L 대용)
+    localparam C_L      = 5'd13; // L
 
     // 중복 체크 함수
     function check_duplicate;
@@ -203,8 +204,8 @@ module mode1_number_baseball(
 
                     if (btn_up_edge) guess[current_pos] <= (guess[current_pos] == 9) ? 0 : guess[current_pos] + 1;
                     if (btn_down_edge) guess[current_pos] <= (guess[current_pos] == 0) ? 9 : guess[current_pos] - 1;
-                    if (btn_right_edge) current_pos <= (current_pos == 3) ? 0 : current_pos + 1;
-                    if (btn_left_edge) current_pos <= (current_pos == 0) ? 3 : current_pos - 1;
+                    if (btn_left_edge) current_pos <= (current_pos == 3) ? 0 : current_pos + 1;
+                    if (btn_right_edge) current_pos <= (current_pos == 0) ? 3 : current_pos - 1;
 
                     if (btn_confirm_edge) begin
                         if (!check_duplicate(guess[0], guess[1], guess[2], guess[3])) begin
@@ -230,7 +231,7 @@ module mode1_number_baseball(
                 end
 
                 GAME_LOSE: begin
-                    seg_data <= {C_1, C_o, C_S, C_E}; // 1OSE (L대신 1사용)
+                    seg_data <= {C_L, C_o, C_S, C_E}; // LOSE 
                 end
             endcase
         end
