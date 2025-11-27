@@ -6,7 +6,7 @@ module mode3_credits(
     output reg [19:0] seg_data
 );
 
-    // 문자 매핑 (seg_display_controller 참조)
+    // 문�? 매핑 (seg_display_controller 참조)
     localparam C_1 = 5'd1;
     localparam C_2 = 5'd2;
     localparam C_3 = 5'd3;
