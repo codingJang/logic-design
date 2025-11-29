@@ -101,7 +101,7 @@ module mode1_number_baseball(
 
     // Button Edge Registers
     always @(posedge clk or posedge reset) begin
-        if (reset) begin
+        if (reset || !active) begin
             btn_up_prev <= 0; btn_down_prev <= 0; btn_left_prev <= 0;
             btn_right_prev <= 0; btn_confirm_prev <= 0;
         end else begin
@@ -165,6 +165,10 @@ module mode1_number_baseball(
             guess[0] <= 0; guess[1] <= 0; guess[2] <= 0; guess[3] <= 0;
         end else begin
             case (state)
+                IDLE: begin
+                    seg_data <= {5'd0, 5'd0, 5'd0, 5'd0}; // 0000 표시
+                end
+
                 INPUT_ANSWER: begin
                     // 깜빡임�? C_BLANK(31) 사용, 숫�?는 앞�? 0붙여 5비트로
                     seg_data[19:15] <= (current_pos == 3 && blink_clk) ? C_BLANK : {1'b0, answer[3]};
