@@ -141,7 +141,7 @@ module mode1_number_baseball(
                 end
             end
             GUESS_CONFIRM: begin
-                // 중복 에러 상태 - confirm 누르면 다시 입력으로
+                // Duplicate error state - return to input on confirm
                 if (btn_confirm_edge) next_state = INPUT_GUESS;
             end
             SHOW_RESULT: begin
@@ -202,7 +202,7 @@ module mode1_number_baseball(
                     if (btn_left_edge) current_pos <= (current_pos == 3) ? 0 : current_pos + 1;
                     if (btn_right_edge) current_pos <= (current_pos == 0) ? 3 : current_pos - 1;
 
-                    // 중복이 없을 때만 attempt 증가 및 결과 계산
+                    // Increment attempt and calculate result only if no duplicates
                     if (btn_confirm_edge && !check_duplicate(guess[0], guess[1], guess[2], guess[3])) begin
                         attempt_count <= attempt_count + 1;
                         led[attempt_count] <= 1'b1;
@@ -211,7 +211,7 @@ module mode1_number_baseball(
                 end
 
                 GUESS_CONFIRM: begin
-                    // 중복 에러 표시
+                    // Display duplicate error
                     seg_data <= {C_HYPHEN, C_E, C_r, C_r}; // -Err
                 end
 
