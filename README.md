@@ -120,8 +120,8 @@ This keeps the repository small and portable: the Vivado project can always be r
 ### 1. Clone the Repository
 
 ```bash
-git clone <your-repo-url>.git
-cd logic-design-vivado
+git clone https://github.com/codingJang/logic-design.git
+cd logic-design
 ```
 
 ### 2. Run the Rebuild Script
