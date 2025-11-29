@@ -32,7 +32,7 @@ module mode2_led_count(
     localparam C_d      = 5'd19; // d
     localparam C_n      = 5'd20; // n (pi/n 모양)
     localparam C_g      = 5'd9;  // g
-    localparam C_o      = 5'd0;  // o (숫자 0과 동일)
+    localparam C_o      = 5'd17; // o (소문자, 작은 네모 모양) - good용
 
     // Clock divider for 1 second period
     reg [26:0] clk_counter;

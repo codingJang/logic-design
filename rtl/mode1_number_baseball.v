@@ -60,8 +60,9 @@ module mode1_number_baseball(
     localparam C_E      = 5'd11; // E
     localparam C_r      = 5'd12; // r
     localparam C_g      = 5'd9;  // g (숫자 9 모양)
-    localparam C_o      = 5'd0;  // o (숫자 0과 동일)
-    localparam C_S      = 5'd5;  // S (숫�? 5 모양)
+    localparam C_o      = 5'd17; // o (소문자, 작은 네모 모양) - gogo용
+    localparam C_O      = 5'd0;  // O (대문자, 숫자 0과 동일) - LOSE용
+    localparam C_S      = 5'd5;  // S (숫자 5 모양)
     localparam C_b      = 5'd18; // b
     localparam C_d      = 5'd19; // d
     localparam C_1      = 5'd1;  // 1 (L 대용)
@@ -225,7 +226,7 @@ module mode1_number_baseball(
                 end
 
                 GAME_LOSE: begin
-                    seg_data <= {C_L, C_o, C_S, C_E}; // LOSE 
+                    seg_data <= {C_L, C_O, C_S, C_E}; // LOSE (대문자 O 사용)
                 end
             endcase
         end
