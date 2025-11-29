@@ -128,12 +128,9 @@ module mode1_number_baseball(
                 end
             end
             INPUT_GUESS: begin
-                if (btn_confirm_edge) next_state = GUESS_CONFIRM;
-            end
-            GUESS_CONFIRM: begin
                 if (btn_confirm_edge) begin
                     if (check_duplicate(guess[0], guess[1], guess[2], guess[3]))
-                        next_state = INPUT_GUESS;
+                        next_state = GUESS_CONFIRM;
                     else if (guess[0]==answer[0] && guess[1]==answer[1] && 
                              guess[2]==answer[2] && guess[3]==answer[3])
                         next_state = GAME_WIN;
@@ -142,6 +139,10 @@ module mode1_number_baseball(
                     else
                         next_state = SHOW_RESULT;
                 end
+            end
+            GUESS_CONFIRM: begin
+                // 중복 에러 상태 - confirm 누르면 다시 입력으로
+                if (btn_confirm_edge) next_state = INPUT_GUESS;
             end
             SHOW_RESULT: begin
                 if (btn_confirm_edge) next_state = INPUT_GUESS;
@@ -200,20 +201,18 @@ module mode1_number_baseball(
                     if (btn_down_edge) guess[current_pos] <= (guess[current_pos] == 0) ? 9 : guess[current_pos] - 1;
                     if (btn_left_edge) current_pos <= (current_pos == 3) ? 0 : current_pos + 1;
                     if (btn_right_edge) current_pos <= (current_pos == 0) ? 3 : current_pos - 1;
-                end
 
-                GUESS_CONFIRM: begin
-                    if (check_duplicate(guess[0], guess[1], guess[2], guess[3])) begin
-                        seg_data <= {C_HYPHEN, C_E, C_r, C_r}; // -Err
-                    end else begin
-                        seg_data <= {C_g, C_o, C_g, C_o};      // gogo
-                    end
-                    
+                    // 중복이 없을 때만 attempt 증가 및 결과 계산
                     if (btn_confirm_edge && !check_duplicate(guess[0], guess[1], guess[2], guess[3])) begin
                         attempt_count <= attempt_count + 1;
                         led[attempt_count] <= 1'b1;
                         calculate_strike_ball();
                     end
+                end
+
+                GUESS_CONFIRM: begin
+                    // 중복 에러 표시
+                    seg_data <= {C_HYPHEN, C_E, C_r, C_r}; // -Err
                 end
 
                 SHOW_RESULT: begin
