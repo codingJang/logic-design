@@ -4,8 +4,12 @@ module mode2_led_count(
     input wire active,
     input wire btn_go_stop,
     output reg [15:0] led,
-    output reg [19:0] seg_data
+    output reg [19:0] seg_data,
+    output wire [3:0] dp_data    // Decimal point (사용 안함)
 );
+
+    // Mode2에서는 소수점 사용 안함
+    assign dp_data = 4'b0000;
 
     // State definitions
     localparam IDLE = 2'd0;
@@ -28,7 +32,7 @@ module mode2_led_count(
     localparam C_d      = 5'd19; // d
     localparam C_n      = 5'd20; // n (pi/n 모양)
     localparam C_g      = 5'd9;  // g
-    localparam C_o      = 5'd17; // o (네모)
+    localparam C_o      = 5'd0;  // o (숫자 0과 동일)
 
     // Clock divider for 1 second period
     reg [26:0] clk_counter;
@@ -87,16 +91,21 @@ module mode2_led_count(
     reg [15:0] lfsr;
     wire feedback = lfsr[15] ^ lfsr[14] ^ lfsr[12] ^ lfsr[3];
     reg [15:0] seed_counter;
+    wire [15:0] new_seed;
+    assign new_seed = {seed_counter[7:0], seed_counter[15:8]} ^ 16'hACE1;
+
+    // seed_counter는 항상 증가 (reset, active 상관없이)
+    always @(posedge clk) begin
+        seed_counter <= seed_counter + 1;
+    end
 
     always @(posedge clk or posedge reset) begin
         if (reset) begin
-            // reset 시에도 seed_counter 기반으로 새로운 시드 생성
-            lfsr <= {seed_counter[7:0], seed_counter[15:8]} ^ 16'hACE1;
-            if (lfsr == 16'h0000) lfsr <= 16'h0001; // 0 방지
+            // reset 시 현재 seed_counter 기반으로 새로운 시드 생성
+            lfsr <= (new_seed == 16'h0000) ? 16'h0001 : new_seed;
         end else if (!active) begin
-            // 비활성 상태에서 계속 카운터 증가 (랜덤성 확보)
-            seed_counter <= seed_counter + 1;
-            lfsr <= {seed_counter[7:0], seed_counter[15:8]} ^ 16'hACE1;
+            // 비활성 상태에서도 seed 기반 값 유지
+            lfsr <= (new_seed == 16'h0000) ? 16'h0001 : new_seed;
         end else begin
             // 활성 상태에서는 LFSR 시프트
             lfsr <= {lfsr[14:0], feedback};

@@ -8,8 +8,12 @@ module mode1_number_baseball(
     input wire btn_right,
     input wire btn_confirm,
     output reg [15:0] led,
-    output reg [19:0] seg_data
+    output reg [19:0] seg_data,
+    output wire [3:0] dp_data    // Decimal point (사용 안함)
 );
+
+    // Mode1에서는 소수점 사용 안함
+    assign dp_data = 4'b0000;
 
     // State definitions
     localparam IDLE = 3'd0;
@@ -55,8 +59,8 @@ module mode1_number_baseball(
     localparam C_HYPHEN = 5'd10; // -
     localparam C_E      = 5'd11; // E
     localparam C_r      = 5'd12; // r
-    localparam C_g      = 5'd9;  // g (숫�? 9 모양)
-    localparam C_o      = 5'd17; // o (네모 모양)
+    localparam C_g      = 5'd9;  // g (숫자 9 모양)
+    localparam C_o      = 5'd0;  // o (숫자 0과 동일)
     localparam C_S      = 5'd5;  // S (숫�? 5 모양)
     localparam C_b      = 5'd18; // b
     localparam C_d      = 5'd19; // d

@@ -9,6 +9,7 @@ module top_module(
     input wire btn_center,
     output wire [15:0] led,      // 16 LEDs
     output wire [6:0] seg,       // 7-segment display segments
+    output wire dp,              // 7-segment decimal point
     output wire [3:0] an         // 7-segment display anodes (4 digits)
 );
 
@@ -39,7 +40,9 @@ module top_module(
     // Internal signals
     wire [15:0] led_mode1, led_mode2, led_mode3;
     wire [19:0] seg_data_mode1, seg_data_mode2, seg_data_mode3;
+    wire [3:0] dp_data_mode1, dp_data_mode2, dp_data_mode3;
     wire [19:0] seg_data;
+    wire [3:0] dp_data;
 
     // Mode detection
     wire mode1_active = (mode_sw == 3'b001);  // One switch up: Mode1 (Number Baseball)
@@ -57,9 +60,9 @@ module top_module(
         .btn_right(btn_right_db),
         .btn_confirm(btn_center_db), 
         .led(led_mode1),
-        .seg_data(seg_data_mode1)
+        .seg_data(seg_data_mode1),
+        .dp_data(dp_data_mode1)
     );
-
 
     // Instantiate Mode 2: LED Count Game (with debounced button)
     mode2_led_count mode2(
@@ -68,7 +71,8 @@ module top_module(
         .active(mode2_active),
         .btn_go_stop(btn_center_db),
         .led(led_mode2),
-        .seg_data(seg_data_mode2)
+        .seg_data(seg_data_mode2),
+        .dp_data(dp_data_mode2)
     );
 
     // Instantiate Mode 3: Credits Display
@@ -77,7 +81,8 @@ module top_module(
         .reset(reset),
         .active(mode3_active),
         .led(led_mode3),
-        .seg_data(seg_data_mode3)
+        .seg_data(seg_data_mode3),
+        .dp_data(dp_data_mode3)
     );
 
     // Mode multiplexing for outputs
@@ -89,12 +94,18 @@ module top_module(
                       mode2_active ? seg_data_mode2 :
                       mode3_active ? seg_data_mode3 : 20'b0;
 
+    assign dp_data = mode1_active ? dp_data_mode1 :
+                     mode2_active ? dp_data_mode2 :
+                     mode3_active ? dp_data_mode3 : 4'b0;
+
     // 7-segment display controller
     seg_display_controller seg_ctrl(
         .clk(clk),
         .reset(reset),
         .seg_data(seg_data),
+        .dp_data(dp_data),
         .seg(seg),
+        .dp(dp),
         .an(an)
     );
 

@@ -3,8 +3,12 @@ module mode3_credits(
     input wire reset,
     input wire active,
     output reg [15:0] led,
-    output reg [19:0] seg_data
+    output reg [19:0] seg_data,
+    output wire [3:0] dp_data    // Decimal point: 첫 번째 digit에만 표시
 );
+
+    // 첫 번째 digit(leftmost)에만 소수점 표시: dp_data[3]=1
+    assign dp_data = 4'b1000;
 
     // 문�? 매핑 (seg_display_controller 참조)
     localparam C_1 = 5'd1;

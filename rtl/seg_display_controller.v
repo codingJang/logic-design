@@ -2,7 +2,9 @@ module seg_display_controller(
     input wire clk,
     input wire reset,
     input wire [19:0] seg_data,  // 4 digits to display (5 bits each = 32 characters)
+    input wire [3:0] dp_data,    // Decimal point for each digit (1=on, active low output)
     output reg [6:0] seg,         // 7-segment cathodes (a-g)
+    output reg dp,                // Decimal point cathode (active low)
     output reg [3:0] an           // 4 anodes for 4 digits
 );
 
@@ -31,6 +33,17 @@ module seg_display_controller(
             2'b10: an = 4'b1101;  // Activate digit 1
             2'b11: an = 4'b1110;  // Activate digit 0 (rightmost)
             default: an = 4'b1111;
+        endcase
+    end
+
+    // Decimal point control (active low)
+    always @(*) begin
+        case (digit_select)
+            2'b00: dp = ~dp_data[3];  // Digit 3 (leftmost) dp
+            2'b01: dp = ~dp_data[2];  // Digit 2 dp
+            2'b10: dp = ~dp_data[1];  // Digit 1 dp
+            2'b11: dp = ~dp_data[0];  // Digit 0 (rightmost) dp
+            default: dp = 1'b1;       // Off
         endcase
     end
 
