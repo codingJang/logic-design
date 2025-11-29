@@ -50,19 +50,20 @@ module mode1_number_baseball(
     assign btn_right_edge = btn_right && !btn_right_prev;
     assign btn_confirm_edge = btn_confirm && !btn_confirm_prev;
 
-    // 20비트 문자 매핑 상수를 정의 (seg_display_controller와 일치)
-    localparam C_BLANK  = 5'd31; // 꺼짐 (깜빡임용)
+    // 20비트 문�? 매핑 �?수를 정�?� (seg_display_controller와 �?�치)
+    localparam C_BLANK  = 5'd31; // 꺼�? (깜빡임용)
     localparam C_HYPHEN = 5'd10; // -
     localparam C_E      = 5'd11; // E
     localparam C_r      = 5'd12; // r
-    localparam C_g      = 5'd9;  // g (숫자 9 모양)
+    localparam C_g      = 5'd9;  // g (숫�? 9 모양)
     localparam C_o      = 5'd17; // o (네모 모양)
-    localparam C_S      = 5'd5;  // S (숫자 5 모양)
+    localparam C_S      = 5'd5;  // S (숫�? 5 모양)
     localparam C_b      = 5'd18; // b
     localparam C_d      = 5'd19; // d
     localparam C_1      = 5'd1;  // 1 (L 대용)
+    localparam C_L      = 5'd13; // L
 
-    // 중복 체크 함수
+    // 중복 체�?� 함수
     function check_duplicate;
         input [3:0] d0, d1, d2, d3;
         begin
@@ -104,7 +105,7 @@ module mode1_number_baseball(
         end
     end
 
-    // Next State Logic (중복 검사 로직을 이곳으로 통합하여 버그 수정)
+    // Next State Logic (중복 검사 로�?�?� �?�곳으로 통합하여 버그 수정)
     always @(*) begin
         next_state = state;
         case (state)
@@ -116,7 +117,7 @@ module mode1_number_baseball(
             end
             ANSWER_CONFIRM: begin
                 if (btn_confirm_edge) begin
-                    // 중복이면 다시 입력으로, 아니면 게임 시작
+                    // 중복�?�면 다시 입력으로, 아니면 게임 시작
                     if (check_duplicate(answer[0], answer[1], answer[2], answer[3]))
                         next_state = INPUT_ANSWER;
                     else
@@ -160,7 +161,7 @@ module mode1_number_baseball(
         end else begin
             case (state)
                 INPUT_ANSWER: begin
-                    // 깜빡임에 C_BLANK(31) 사용, 숫자는 앞에 0붙여 5비트로
+                    // 깜빡임�? C_BLANK(31) 사용, 숫�?는 앞�? 0붙여 5비트로
                     seg_data[19:15] <= (current_pos == 3 && blink_clk) ? C_BLANK : {1'b0, answer[3]};
                     seg_data[14:10] <= (current_pos == 2 && blink_clk) ? C_BLANK : {1'b0, answer[2]};
                     seg_data[9:5]   <= (current_pos == 1 && blink_clk) ? C_BLANK : {1'b0, answer[1]};
@@ -168,12 +169,12 @@ module mode1_number_baseball(
 
                     if (btn_up_edge) answer[current_pos] <= (answer[current_pos] == 9) ? 0 : answer[current_pos] + 1;
                     if (btn_down_edge) answer[current_pos] <= (answer[current_pos] == 0) ? 9 : answer[current_pos] - 1;
-                    if (btn_right_edge) current_pos <= (current_pos == 3) ? 0 : current_pos + 1;
-                    if (btn_left_edge) current_pos <= (current_pos == 0) ? 3 : current_pos - 1;
+                    if (btn_left_edge) current_pos <= (current_pos == 3) ? 0 : current_pos + 1;
+                    if (btn_right_edge) current_pos <= (current_pos == 0) ? 3 : current_pos - 1;
                 end
 
                 ANSWER_CONFIRM: begin
-                    // [수정됨] -Err / gogo 표시
+                    // [수정�?�] -Err / gogo 표시
                     if (check_duplicate(answer[0], answer[1], answer[2], answer[3])) begin
                         seg_data <= {C_HYPHEN, C_E, C_r, C_r}; // -Err
                     end else begin
@@ -182,7 +183,7 @@ module mode1_number_baseball(
                 end
 
                 INPUT_GUESS: begin
-                    // 깜빡임에 C_BLANK 사용
+                    // 깜빡임�? C_BLANK 사용
                     seg_data[19:15] <= (current_pos == 3 && blink_clk) ? C_BLANK : {1'b0, guess[3]};
                     seg_data[14:10] <= (current_pos == 2 && blink_clk) ? C_BLANK : {1'b0, guess[2]};
                     seg_data[9:5]   <= (current_pos == 1 && blink_clk) ? C_BLANK : {1'b0, guess[1]};
@@ -190,8 +191,8 @@ module mode1_number_baseball(
 
                     if (btn_up_edge) guess[current_pos] <= (guess[current_pos] == 9) ? 0 : guess[current_pos] + 1;
                     if (btn_down_edge) guess[current_pos] <= (guess[current_pos] == 0) ? 9 : guess[current_pos] - 1;
-                    if (btn_right_edge) current_pos <= (current_pos == 3) ? 0 : current_pos + 1;
-                    if (btn_left_edge) current_pos <= (current_pos == 0) ? 3 : current_pos - 1;
+                    if (btn_left_edge) current_pos <= (current_pos == 3) ? 0 : current_pos + 1;
+                    if (btn_right_edge) current_pos <= (current_pos == 0) ? 3 : current_pos - 1;
 
                     // 중복 여부와 관계없이 confirm 허용
                     if (btn_confirm_edge) begin
@@ -220,7 +221,7 @@ module mode1_number_baseball(
                 end
 
                 GAME_LOSE: begin
-                    seg_data <= {C_1, C_o, C_S, C_E}; // 1OSE (L대신 1사용)
+                    seg_data <= {C_L, C_o, C_S, C_E}; // LOSE 
                 end
             endcase
         end

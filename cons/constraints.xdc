@@ -13,7 +13,7 @@ set_property PACKAGE_PIN V16 [get_ports {mode_sw[1]}]
     set_property IOSTANDARD LVCMOS33 [get_ports {mode_sw[1]}]
 set_property PACKAGE_PIN W16 [get_ports {mode_sw[2]}]
     set_property IOSTANDARD LVCMOS33 [get_ports {mode_sw[2]}]
-set_property PACKAGE_PIN W17 [get_ports reset]
+set_property PACKAGE_PIN R2 [get_ports reset]
     set_property IOSTANDARD LVCMOS33 [get_ports reset]
 
 ## LEDs
@@ -104,7 +104,7 @@ set_property CFGBVS VCCO [current_design]
 ##
 ## 2. Pin assignments in this file:
 ##    - clk: W5 (100 MHz system clock)
-##    - reset: W17 (leftmost switch - SW3)
+##    - reset: R2 (leftmost switch - SW3)
 ##    - mode_sw[2:0]: W16, V16, V17 (SW2, SW1, SW0)
 ##    - led[15:0]: 16 LEDs on the board
 ##    - seg[6:0]: 7-segment cathodes
