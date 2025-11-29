@@ -71,7 +71,7 @@ Displays team member names in rotation.
 This repository is organized following the `vivado_setup` style: **only HDL/constraints/scripts are tracked in Git; Vivado’s generated project directory is not**.
 
 ```text
-logic-design-vivado/
+logic-design/
 ├── rtl/                         # Verilog HDL source files
 │   ├── top_module.v             # Top-level module with mode selection
 │   ├── mode1_number_baseball.v  # Mode 1 implementation
