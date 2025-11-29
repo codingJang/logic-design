@@ -107,7 +107,6 @@ module mode2_led_count(
     // Main Logic & Display
     always @(posedge clk or posedge reset) begin
         if (reset || !active) begin
-            target_count <= 5'd1;
             current_count <= 5'd0;
             wave_position <= 5'd15;
             wave_direction <= 0;
