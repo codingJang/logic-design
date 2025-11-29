@@ -15,15 +15,16 @@ module mode1_number_baseball(
     assign dp_data = 4'b0000;
 
     // State definitions
-    localparam IDLE = 3'd0;
-    localparam INPUT_ANSWER = 3'd1;
-    localparam ANSWER_CONFIRM = 3'd2;
-    localparam INPUT_GUESS = 3'd3;
-    localparam SHOW_RESULT = 3'd4;
-    localparam GAME_WIN = 3'd5;
-    localparam GAME_LOSE = 3'd6;
+    localparam IDLE = 4'd0;
+    localparam INPUT_ANSWER = 4'd1;
+    localparam ANSWER_CONFIRM = 4'd2;
+    localparam INPUT_GUESS = 4'd3;
+    localparam SHOW_RESULT = 4'd4;
+    localparam GAME_WIN = 4'd5;
+    localparam GAME_LOSE = 4'd6;
+    localparam GUESS_CONFIRM = 4'd7;
 
-    reg [2:0] state, next_state;
+    reg [3:0] state, next_state;
 
     // Answer and guess storage (4 digits, each 4 bits)
     reg [3:0] answer [3:0];
@@ -127,9 +128,14 @@ module mode1_number_baseball(
                 end
             end
             INPUT_GUESS: begin
+                if (btn_confirm_edge) next_state = GUESS_CONFIRM;
+            end
+            GUESS_CONFIRM: begin
                 if (btn_confirm_edge) begin
-                    if (guess[0]==answer[0] && guess[1]==answer[1] && 
-                        guess[2]==answer[2] && guess[3]==answer[3])
+                    if (check_duplicate(guess[0], guess[1], guess[2], guess[3]))
+                        next_state = INPUT_GUESS;
+                    else if (guess[0]==answer[0] && guess[1]==answer[1] && 
+                             guess[2]==answer[2] && guess[3]==answer[3])
                         next_state = GAME_WIN;
                     else if (attempt_count >= 15)
                         next_state = GAME_LOSE;
@@ -194,8 +200,16 @@ module mode1_number_baseball(
                     if (btn_down_edge) guess[current_pos] <= (guess[current_pos] == 0) ? 9 : guess[current_pos] - 1;
                     if (btn_left_edge) current_pos <= (current_pos == 3) ? 0 : current_pos + 1;
                     if (btn_right_edge) current_pos <= (current_pos == 0) ? 3 : current_pos - 1;
+                end
 
-                    if (btn_confirm_edge) begin
+                GUESS_CONFIRM: begin
+                    if (check_duplicate(guess[0], guess[1], guess[2], guess[3])) begin
+                        seg_data <= {C_HYPHEN, C_E, C_r, C_r}; // -Err
+                    end else begin
+                        seg_data <= {C_g, C_o, C_g, C_o};      // gogo
+                    end
+                    
+                    if (btn_confirm_edge && !check_duplicate(guess[0], guess[1], guess[2], guess[3])) begin
                         attempt_count <= attempt_count + 1;
                         led[attempt_count] <= 1'b1;
                         calculate_strike_ball();
