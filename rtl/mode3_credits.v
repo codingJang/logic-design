@@ -29,17 +29,18 @@ module mode3_credits(
     // State for cycling through members
     reg [1:0] member_index;  // 0-2 for 3 members (0-3 if 4 members)
 
-    // Clock divider for 3 second period
-    reg [27:0] clk_counter;
+    // Clock divider for 3 second period (100MHz 기준: 3초 = 300,000,000 사이클)
+    // 300,000,000은 29비트 필요 (28비트 최대값은 268,435,455)
+    reg [28:0] clk_counter;
     wire clk_3s;
-    assign clk_3s = (clk_counter == 28'd300_000_000);  // Adjust for your clock frequency (assuming 100MHz)
+    assign clk_3s = (clk_counter == 29'd299_999_999);  // 0부터 시작하므로 -1
 
     // Clock divider
     always @(posedge clk or posedge reset) begin
         if (reset || !active) begin
             clk_counter <= 0;
         end else begin
-            if (clk_counter == 28'd300_000_000) begin
+            if (clk_counter == 29'd299_999_999) begin
                 clk_counter <= 0;
             end else begin
                 clk_counter <= clk_counter + 1;

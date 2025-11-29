@@ -87,15 +87,6 @@ module mode1_number_baseball(
     end
 
 
-    // State register
-    always @(posedge clk or posedge reset) begin
-        if (reset || !active) begin
-            state <= IDLE;
-        end else begin
-            state <= next_state;
-        end
-    end
-
     // State Register
     always @(posedge clk or posedge reset) begin
         if (reset || !active) state <= IDLE;
@@ -134,22 +125,18 @@ module mode1_number_baseball(
             end
             INPUT_GUESS: begin
                 if (btn_confirm_edge) begin
-                    // 추측값 중복이면 상태 유지 (에러만 표시)
-                    if (check_duplicate(guess[0], guess[1], guess[2], guess[3])) begin
-                        next_state = INPUT_GUESS;
-                    end else begin
-                        // 중복 없으면 결과 판정
-                        if (guess[0]==answer[0] && guess[1]==answer[1] && 
-                            guess[2]==answer[2] && guess[3]==answer[3])
-                            next_state = GAME_WIN;
-                        else if (attempt_count >= 15) // 이번이 16번째
-                            next_state = GAME_LOSE;
-                        else
-                            next_state = SHOW_RESULT;
-                    end
+                    // 중복 여부와 관계없이 confirm 허용, S/B 계산
+                    if (guess[0]==answer[0] && guess[1]==answer[1] && 
+                        guess[2]==answer[2] && guess[3]==answer[3])
+                        next_state = GAME_WIN;
+                    else if (attempt_count >= 15) // 이번이 16번째
+                        next_state = GAME_LOSE;
+                    else
+                        next_state = SHOW_RESULT;
                 end
             end
             SHOW_RESULT: begin
+                // confirm 누르면 다음 추측 입력으로 (guess 리셋은 Main Logic에서 처리)
                 if (btn_confirm_edge) next_state = INPUT_GUESS;
             end
             GAME_WIN: begin
@@ -206,14 +193,11 @@ module mode1_number_baseball(
                     if (btn_right_edge) current_pos <= (current_pos == 3) ? 0 : current_pos + 1;
                     if (btn_left_edge) current_pos <= (current_pos == 0) ? 3 : current_pos - 1;
 
+                    // 중복 여부와 관계없이 confirm 허용
                     if (btn_confirm_edge) begin
-                        if (!check_duplicate(guess[0], guess[1], guess[2], guess[3])) begin
-                            attempt_count <= attempt_count + 1;
-                            led[attempt_count] <= 1'b1;
-                            calculate_strike_ball();
-                        end else begin
-                            seg_data <= {C_HYPHEN, C_E, C_r, C_r}; // -Err
-                        end
+                        attempt_count <= attempt_count + 1;
+                        led[attempt_count] <= 1'b1;
+                        calculate_strike_ball();
                     end
                 end
 
@@ -222,7 +206,13 @@ module mode1_number_baseball(
                     seg_data[19:15] <= {1'b0, strike_count};
                     seg_data[14:10] <= C_S;
                     seg_data[9:5]   <= {1'b0, ball_count};
-                    seg_data[4:0]   <= C_b; 
+                    seg_data[4:0]   <= C_b;
+                    
+                    // confirm 누르면 다음 추측을 위해 guess와 current_pos 리셋
+                    if (btn_confirm_edge) begin
+                        guess[0] <= 0; guess[1] <= 0; guess[2] <= 0; guess[3] <= 0;
+                        current_pos <= 0;
+                    end
                 end
 
                 GAME_WIN: begin
