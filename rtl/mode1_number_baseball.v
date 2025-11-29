@@ -9,10 +9,9 @@ module mode1_number_baseball(
     input wire btn_confirm,
     output reg [15:0] led,
     output reg [19:0] seg_data,
-    output wire [3:0] dp_data    // Decimal point (사용 안함)
+    output wire [3:0] dp_data
 );
 
-    // Mode1에서는 소수점 사용 안함
     assign dp_data = 4'b0000;
 
     // State definitions
@@ -30,7 +29,6 @@ module mode1_number_baseball(
     reg [3:0] answer [3:0];
     reg [3:0] guess [3:0];
 
-    // Current digit position (0-3)
     reg [1:0] current_pos;
 
     // Strike and Ball counters
@@ -40,7 +38,7 @@ module mode1_number_baseball(
     // Attempt counter (max 16)
     reg [4:0] attempt_count;
 
-    // Blink control for current position
+    // Blink control
     reg blink_clk;
     reg [25:0] blink_counter;
 
@@ -54,21 +52,21 @@ module mode1_number_baseball(
     assign btn_right_edge = btn_right && !btn_right_prev;
     assign btn_confirm_edge = btn_confirm && !btn_confirm_prev;
 
-    // 20비트 문�? 매핑 �?수를 정�?� (seg_display_controller와 �?�치)
-    localparam C_BLANK  = 5'd31; // 꺼�? (깜빡임용)
-    localparam C_HYPHEN = 5'd10; // -
-    localparam C_E      = 5'd11; // E
-    localparam C_r      = 5'd12; // r
-    localparam C_g      = 5'd9;  // g (숫자 9 모양)
-    localparam C_o      = 5'd17; // o (소문자, 작은 네모 모양) - gogo용
-    localparam C_O      = 5'd0;  // O (대문자, 숫자 0과 동일) - LOSE용
-    localparam C_S      = 5'd5;  // S (숫자 5 모양)
-    localparam C_b      = 5'd18; // b
-    localparam C_d      = 5'd19; // d
-    localparam C_1      = 5'd1;  // 1 (L 대용)
-    localparam C_L      = 5'd13; // L
+    // Character codes for 7-segment display
+    localparam C_BLANK  = 5'd31;
+    localparam C_HYPHEN = 5'd10;
+    localparam C_E      = 5'd11;
+    localparam C_r      = 5'd12;
+    localparam C_g      = 5'd9;
+    localparam C_o      = 5'd17;
+    localparam C_O      = 5'd0;
+    localparam C_S      = 5'd5;
+    localparam C_b      = 5'd18;
+    localparam C_d      = 5'd19;
+    localparam C_1      = 5'd1;
+    localparam C_L      = 5'd13;
 
-    // 중복 체�?� 함수
+    // Check for duplicate digits
     function check_duplicate;
         input [3:0] d0, d1, d2, d3;
         begin
@@ -77,7 +75,7 @@ module mode1_number_baseball(
         end
     endfunction
 
-    // Blink Timer
+    // Blink timer (0.5s period)
     always @(posedge clk or posedge reset) begin
         if (reset) begin
             blink_counter <= 0;
@@ -93,13 +91,13 @@ module mode1_number_baseball(
     end
 
 
-    // State Register
+    // State register
     always @(posedge clk or posedge reset) begin
         if (reset || !active) state <= IDLE;
         else state <= next_state;
     end
 
-    // Button Edge Registers
+    // Button edge registers
     always @(posedge clk or posedge reset) begin
         if (reset || !active) begin
             btn_up_prev <= 0; btn_down_prev <= 0; btn_left_prev <= 0;
@@ -110,7 +108,7 @@ module mode1_number_baseball(
         end
     end
 
-    // Next State Logic (중복 검사 로�?�?� �?�곳으로 통합하여 버그 수정)
+    // Next state logic
     always @(*) begin
         next_state = state;
         case (state)
@@ -122,7 +120,6 @@ module mode1_number_baseball(
             end
             ANSWER_CONFIRM: begin
                 if (btn_confirm_edge) begin
-                    // 중복�?�면 다시 입력으로, 아니면 게임 시작
                     if (check_duplicate(answer[0], answer[1], answer[2], answer[3]))
                         next_state = INPUT_ANSWER;
                     else
@@ -131,18 +128,16 @@ module mode1_number_baseball(
             end
             INPUT_GUESS: begin
                 if (btn_confirm_edge) begin
-                    // 중복 여부와 관계없이 confirm 허용, S/B 계산
                     if (guess[0]==answer[0] && guess[1]==answer[1] && 
                         guess[2]==answer[2] && guess[3]==answer[3])
                         next_state = GAME_WIN;
-                    else if (attempt_count >= 15) // 이번이 16번째
+                    else if (attempt_count >= 15)
                         next_state = GAME_LOSE;
                     else
                         next_state = SHOW_RESULT;
                 end
             end
             SHOW_RESULT: begin
-                // confirm 누르면 다음 추측 입력으로 (guess 리셋은 Main Logic에서 처리)
                 if (btn_confirm_edge) next_state = INPUT_GUESS;
             end
             GAME_WIN: begin
@@ -154,23 +149,22 @@ module mode1_number_baseball(
         endcase
     end
 
-    // Main Logic & Output
+    // Main logic and output
     always @(posedge clk or posedge reset) begin
         if (reset || !active) begin
             current_pos <= 0; attempt_count <= 0;
             strike_count <= 0; ball_count <= 0;
             led <= 16'b0; 
-            seg_data <= {5'd0, 5'd0, 5'd0, 5'd0}; // 0000
+            seg_data <= {5'd0, 5'd0, 5'd0, 5'd0};
             answer[0] <= 0; answer[1] <= 0; answer[2] <= 0; answer[3] <= 0;
             guess[0] <= 0; guess[1] <= 0; guess[2] <= 0; guess[3] <= 0;
         end else begin
             case (state)
                 IDLE: begin
-                    seg_data <= {5'd0, 5'd0, 5'd0, 5'd0}; // 0000 표시
+                    seg_data <= {5'd0, 5'd0, 5'd0, 5'd0};
                 end
 
                 INPUT_ANSWER: begin
-                    // 깜빡임�? C_BLANK(31) 사용, 숫�?는 앞�? 0붙여 5비트로
                     seg_data[19:15] <= (current_pos == 3 && blink_clk) ? C_BLANK : {1'b0, answer[3]};
                     seg_data[14:10] <= (current_pos == 2 && blink_clk) ? C_BLANK : {1'b0, answer[2]};
                     seg_data[9:5]   <= (current_pos == 1 && blink_clk) ? C_BLANK : {1'b0, answer[1]};
@@ -183,7 +177,6 @@ module mode1_number_baseball(
                 end
 
                 ANSWER_CONFIRM: begin
-                    // [수정�?�] -Err / gogo 표시
                     if (check_duplicate(answer[0], answer[1], answer[2], answer[3])) begin
                         seg_data <= {C_HYPHEN, C_E, C_r, C_r}; // -Err
                     end else begin
@@ -192,7 +185,6 @@ module mode1_number_baseball(
                 end
 
                 INPUT_GUESS: begin
-                    // 깜빡임�? C_BLANK 사용
                     seg_data[19:15] <= (current_pos == 3 && blink_clk) ? C_BLANK : {1'b0, guess[3]};
                     seg_data[14:10] <= (current_pos == 2 && blink_clk) ? C_BLANK : {1'b0, guess[2]};
                     seg_data[9:5]   <= (current_pos == 1 && blink_clk) ? C_BLANK : {1'b0, guess[1]};
@@ -203,7 +195,6 @@ module mode1_number_baseball(
                     if (btn_left_edge) current_pos <= (current_pos == 3) ? 0 : current_pos + 1;
                     if (btn_right_edge) current_pos <= (current_pos == 0) ? 3 : current_pos - 1;
 
-                    // 중복 여부와 관계없이 confirm 허용
                     if (btn_confirm_edge) begin
                         attempt_count <= attempt_count + 1;
                         led[attempt_count] <= 1'b1;
@@ -212,13 +203,11 @@ module mode1_number_baseball(
                 end
 
                 SHOW_RESULT: begin
-                    // 1S 1b 표시 (S=5, b=18)
                     seg_data[19:15] <= {1'b0, strike_count};
                     seg_data[14:10] <= C_S;
                     seg_data[9:5]   <= {1'b0, ball_count};
                     seg_data[4:0]   <= C_b;
                     
-                    // confirm 누르면 다음 추측을 위해 guess와 current_pos 리셋
                     if (btn_confirm_edge) begin
                         guess[0] <= 0; guess[1] <= 0; guess[2] <= 0; guess[3] <= 0;
                         current_pos <= 0;
@@ -230,13 +219,13 @@ module mode1_number_baseball(
                 end
 
                 GAME_LOSE: begin
-                    seg_data <= {C_L, C_O, C_S, C_E}; // LOSE (대문자 O 사용)
+                    seg_data <= {C_L, C_O, C_S, C_E}; // LOSE
                 end
             endcase
         end
     end
 
-    // Task for S/B calculation
+    // Strike/Ball calculation
     task calculate_strike_ball;
         integer i, j;
         begin
