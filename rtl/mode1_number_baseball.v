@@ -23,6 +23,7 @@ module mode1_number_baseball(
     localparam SHOW_RESULT = 3'd4;
     localparam GAME_WIN = 3'd5;
     localparam GAME_LOSE = 3'd6;
+    localparam INIT = 3'd7;
 
     reg [2:0] state, next_state;
 
@@ -95,7 +96,7 @@ module mode1_number_baseball(
 
     // State Register
     always @(posedge clk or posedge reset) begin
-        if (reset || !active) state <= IDLE;
+        if (reset || !active) state <= INIT;
         else state <= next_state;
     end
 
@@ -157,14 +158,25 @@ module mode1_number_baseball(
     // Main Logic & Output
     always @(posedge clk or posedge reset) begin
         if (reset || !active) begin
+            // 비동기 리셋 시 기본값 설정
             current_pos <= 0; attempt_count <= 0;
             strike_count <= 0; ball_count <= 0;
             led <= 16'b0; 
-            seg_data <= {5'd0, 5'd0, 5'd0, 5'd0}; // 0000
+            seg_data <= {5'd0, 5'd0, 5'd0, 5'd0};
             answer[0] <= 0; answer[1] <= 0; answer[2] <= 0; answer[3] <= 0;
             guess[0] <= 0; guess[1] <= 0; guess[2] <= 0; guess[3] <= 0;
         end else begin
             case (state)
+                INIT: begin
+                    // 초기화 상태: 모든 레지스터 확실하게 0으로 설정
+                    current_pos <= 0; attempt_count <= 0;
+                    strike_count <= 0; ball_count <= 0;
+                    led <= 16'b0; 
+                    seg_data <= {5'd0, 5'd0, 5'd0, 5'd0};
+                    answer[0] <= 0; answer[1] <= 0; answer[2] <= 0; answer[3] <= 0;
+                    guess[0] <= 0; guess[1] <= 0; guess[2] <= 0; guess[3] <= 0;
+                end
+
                 IDLE: begin
                     seg_data <= {5'd0, 5'd0, 5'd0, 5'd0}; // 0000 표시
                 end
